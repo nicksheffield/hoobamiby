@@ -44,18 +44,19 @@
 			-Support for expansions
 			-When czar leaves and the cards are revealed, everything bugs out
 			-Delay on winner screen
+			-Late joining players don't see any cards
 
 
 
 */
 
 var
-express 		= require('express'),
-app 			= express(),
-server 			= require('http').createServer(app),
-io 				= require('socket.io').listen(server, {log: false}),
-path 			= require('path'),
-lessMiddleware 	= require('less-middleware')
+express         = require('express'),
+app             = express(),
+server          = require('http').createServer(app),
+io              = require('socket.io').listen(server, {log: false}),
+path            = require('path'),
+lessMiddleware  = require('less-middleware')
 
 
 
@@ -89,36 +90,36 @@ debug = true,
 
 
 Game = function() {
-	this.name 			= '';
-	this.password 		= '';
-	this.players 		= [];
-	this.house_rules 	= [];
-	this.expansions 	= { first: true, second: true, third: true };
-	this.current_black 	= [];
+	this.name           = '';
+	this.password       = '';
+	this.players        = [];
+	this.house_rules    = [];
+	this.expansions     = { first: true, second: true, third: true };
+	this.current_black  = [];
 	this.current_whites = [];
-	this.score_limit 	= 8;
-	this.player_limit 	= 11;
-	this.show_password 	= true;
-	this.started 		= false;
+	this.score_limit    = 8;
+	this.player_limit   = 11;
+	this.show_password  = true;
+	this.started        = false;
 	this.current_answer = '________';
-	this.cardsInUse 	= [];
-	this.blacksInUse 	= [];
-	this.symbolsInUse 	= [];
-	this.chosen			= false;
+	this.cardsInUse     = [];
+	this.blacksInUse    = [];
+	this.symbolsInUse   = [];
+	this.chosen	        = false;
 
 	return this;
 },
 
 
 Player = function() {
-	this.name 			= '';
-	this.symbol 		= '';
-	this.score 			= 0;
-	this.czar 			= false;
-	this.played_card 	= [];
-	this.hand 			= [];
-	this.socket_id 		= '';
-	this.winner 		= false;
+	this.name           = '';
+	this.symbol         = '';
+	this.score          = 0;
+	this.czar           = false;
+	this.played_card    = [];
+	this.hand           = [];
+	this.socket_id      = '';
+	this.winner         = false;
 
 	return this;
 },
@@ -636,7 +637,7 @@ BlackCards = [
 	{text: "%s. That's how I want to die.", pick: 1},
 	{text: "For my next trick, I will pull %s out of %s2.", pick: 2},
 	{text: "In the new Disney Channel Original Movie, Hannah Montana struggles with %s for the first time.", pick: 1},
-	{text: "%s is a slippery slope that leads to %s2.", pick: 1},
+	{text: "%s is a slippery slope that leads to %s2.", pick: 2},
 	{text: "What does Dick Cheney prefer?  %s", pick: 1},
 	{text: "Dear Abby, I'm having some trouble with %s and would like your advice.", pick: 1},
 	{text: "Instead of coal, santa now gives the bad children %s.", pick: 1},
@@ -897,7 +898,7 @@ Expansions = {
 		black: [
 			{text: "%s would be woefully incomplete without %s2.", pick: 2},
 			{text: "After months of debate, the Occupy Wall Street General Assembly could only agree on \"More %s!\"", pick: 1},
-			{text: "Before %s, all we had was %s2.", pick: 1},
+			{text: "Before %s, all we had was %s2.", pick: 2},
 			{text: "Before I run for president, I must destroy all evidence of my involvement with %s.", pick: 1},
 			{text: "Charades was ruined for me forever when my mom had to act out %s.", pick: 1},
 			{text: "During his midlife crisis, my dad got really into %s.", pick: 1},
@@ -1066,7 +1067,7 @@ Expansions = {
 	},
 	nigrahs: {
 		white: [
-
+			'A face like a bucket of smashed crabs'
 		],
 		black: [
 			{text: "%s? Ten-outta-ten!", pick: 1},
@@ -1076,27 +1077,6 @@ Expansions = {
 		]
 	}
 },
-
-
-HouseRules = [
-	{
-		name: 'Happy Ending',
-		description: "When you're ready to stop plying, play the \"Make a Haiku\" Black Card to end the game. "+
-					"This is the official ceremonial ending of a good game of Cards Against Humanity, and this card should be "+
-					"reserved for the end. (Note: Haikus don't need to follow the 5-7-5 form. They just have to be read dramatically).",
-		callback: function(){ return;}
-	},
-	{
-		name: 'Rebooting the Universe',
-		description: "At any time, players may trade in an Awesome Point to return as many White Cards as they'd like to the deck and draw back up to ten.",
-		callback: function(){ return;}
-	},
-	{
-		name: 'Packing Heat',
-		description: "For Pick 2s all players draw an extra card before playing the hand to open up more options.",
-		callback: function(){ return;}
-	}
-],
 
 
 Symbols = [
@@ -1653,14 +1633,16 @@ Symbols = [
 							console.log('game limit: '+mygame.score_limit);
 
 							if(mygame.players[j].score == mygame.score_limit){
+
 								debug && console.log('choose_white loop 5');
-								console.log('we have a winner!');
-								console.log(mygame.players[j].name);
+
 								io.sockets.in(room).emit('winner', {player: mygame.players[j]});
 							}
+
 							break;
 						}
 					}
+
 					break;
 				}
 			}

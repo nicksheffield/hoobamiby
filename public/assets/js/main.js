@@ -42,11 +42,13 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		current_answer: '________',
 		reveal: false,
 		chosen: false,
+		end: false,
 
 		players: [],
 		current_whites: [],
 		current_black: [],
 		expansions: {},
+		winner: {},
 
 		house_rules: {
 			happy_ending: false,
@@ -101,7 +103,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 
 	$scope.playCard = function(elCard){
 		$scope.$apply(function(){
-			if(!$scope.player.played_card && !$scope.player.czar && !$scope.game.reveal){
+			if(!$scope.player.played_card && !$scope.player.czar && !$scope.game.reveal && !$scope.game.end){
 				//$scope.game.current_whites.push({text: elCard.text(), player: $scope.player});
 				elCard.addClass('chosen');
 
@@ -113,23 +115,6 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		})
 	}
 
-	$scope.stopTimer = function(){
-		$scope.$apply(function(){
-			clearTimeout($scope.timer);
-			console.log('timer cleared');
-		})
-	}
-
-	$scope.startTimer = function(){
-		$scope.$apply(function(){
-			$scope.timer = setTimeout(function(){
-				console.log('timer triggered');
-				$scope.game.current_answer = $scope.blank_answer;
-			}, 200);
-			console.log('timer set');
-		})
-	}
-
 
 	$scope.createGame = function(){
 		$scope.joining = true;
@@ -138,6 +123,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		socket.emit('join_game', {player: $scope.player});
 	}
 
+
 	$scope.joinGame = function(){
 
 		if(typeof this.game == 'undefined' || $scope.joining){
@@ -145,8 +131,6 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		}
 
 		$scope.joining = true;
-
-		console.log(this.game);
 
 		socket.emit('join_game', {name: this.game.name, player: $scope.player});
 	}
@@ -157,6 +141,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 
 	}
 
+
 	$scope.changeSetting = function(setting){
 		if(!$scope.player.host) return;
 		var settings = {};
@@ -165,11 +150,13 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		socket.emit('change_setting', {game: $scope.game.name, settings: settings});
 	}
 
+
 	$scope.reveal = function(){
 
 		$scope.game.reveal = true;
 
 	}
+
 
 	$scope.chooseWhite = function(card){
 		// look through all the current white cards
@@ -182,6 +169,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 			}
 		}
 	}
+
 
 	// when you connect to a game
 	socket.on('connected', function(data){
@@ -199,10 +187,12 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		}
 	})
 
+
 	// when your name is approved
 	socket.on('browsing', function(){
 		$scope.stage = 'browse_games';
 	})
+
 
 	// when you join a game
 	socket.on('game_joined', function(data){
@@ -230,6 +220,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		}
 	})
 
+
 	// when you leave a game
 	socket.on('left_game', function(){
 		$scope.game.name = '';
@@ -242,10 +233,12 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		$scope.stage = 'browse_games';
 	})
 
+
 	// when a new game is created
 	socket.on('game_created', function(data){
 		$scope.games.push(data.room);
 	})
+
 
 	// when this games player list is updated
 	// Broadcasted to everyone. Used for game browser
@@ -256,6 +249,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 			}
 		}
 	})
+
 
 	// when everyone has left a game and it closes
 	// Broadcasted to everyone. Used for game browser
@@ -271,10 +265,12 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		}
 	})
 
+
 	// when another player joined this room
 	socket.on('player_joined', function(data){
 		$scope.game.players.push(data.player);
 	})
+
 
 	// when another player left this room
 	socket.on('player_left', function(data){
@@ -305,10 +301,12 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		}
 	})
 
+
 	// when this game is updated
 	socket.on('game_updated', function(data){
 		$scope.game = merge($scope.game, data.settings);
 	})
+
 
 	// when this game is started
 	socket.on('start_game', function(data){
@@ -335,12 +333,14 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		socket.emit('request_card', {count: 10});
 	})
 
+
 	// when you are dealt one or more cards
 	socket.on('deal_card', function(data){
 		for(var i=0;i<data.cards.length;i++){
 			$scope.player.hand.push(data.cards[i]);
 		}
 	})
+
 
 	// when the black card is dealt
 	socket.on('deal_black', function(data){
@@ -354,6 +354,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		$scope.game.current_black.push(data.card);
 	})
 
+
 	// when a card was played
 	socket.on('card_played', function(data){
 		$scope.game.current_whites.push(data.card);
@@ -362,6 +363,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 			$scope.reveal();
 		}
 	})
+
 
 	// when a white card is chosen
 	socket.on('white_chosen', function(data){
@@ -387,24 +389,28 @@ app.controller('cardsCtrl', function ($scope, socket) {
 			}
 		}
 
-		// if the player is the czar
-		if($scope.player.czar){
 
-			// then set a timer that will go off after 3 seconds
-			setTimeout(function(){
-				// and cause everyone's screen to wipe, ready for the next round
-				socket.emit('wipe');
-				socket.emit('request_black');
-			}, 5000);
+		if(!$scope.game.end){
 
-		}else{
+			// if the player is the czar
+			if($scope.player.czar){
 
-			// remove the played cards from each players hand
-			$scope.player.hand.splice($scope.player.hand.indexOf($scope.player.played_card), 1);
+				// then set a timer that will go off after 5 seconds
+				setTimeout(function(){
+					// and cause everyone's screen to wipe, ready for the next round
+					socket.emit('wipe');
+					socket.emit('request_black');
+				}, 5000);
 
-			// ask for a new card
-			socket.emit('request_card', {count: 1});
+			}else{
 
+				// remove the played cards from each players hand
+				$scope.player.hand.splice($scope.player.hand.indexOf($scope.player.played_card), 1);
+
+				// ask for a new card
+				socket.emit('request_card', {count: 1});
+
+			}
 		}
 		
 
@@ -450,8 +456,17 @@ app.controller('cardsCtrl', function ($scope, socket) {
 
 	// when someone wins the game
 	socket.on('winner', function(data){
-		$scope.stage = 'victory';
-		$scope.game.winner = data.player;
+		$scope.stage.end = true;
+
+		console.log(data);
+
+		// after 5 seconds
+		setTimeout(function(){
+			console.log(data);
+			// show the victory screen with the new winner
+			$scope.game.winner = data.player;
+			$scope.stage = 'victory';
+		}, 5000);
 	})
 
 
@@ -472,6 +487,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 	socket.on('bad_setting', function(){
 		alert('Those settings will not work.');
 	})
+
 
 	socket.on('username_taken', function(){
 		alert('Someone already has that name.');
