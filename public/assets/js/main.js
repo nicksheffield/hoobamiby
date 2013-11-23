@@ -4,7 +4,7 @@ app.factory('socket', function ($rootScope) {
 	var socket = io.connect('http://192.241.191.126:8003');
 	return {
 		on: function (eventName, callback) {
-			socket.on(eventName, function () {  
+			socket.on(eventName, function () {
 				var args = arguments;
 				$rootScope.$apply(function () {
 					callback.apply(socket, args);
@@ -81,7 +81,8 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		if($scope.player.name.trim() == ''){
 			return;
 		}
-		$scope.stage = 'browse_games';
+
+		socket.emit('browse', {name: $scope.player.name.trim()});
 	}
 	
 
@@ -131,16 +132,10 @@ app.controller('cardsCtrl', function ($scope, socket) {
 
 
 	$scope.createGame = function(){
-		// if the game name is blank
-		if($scope.game.name.trim() == '' || $scope.joining){
-			// stop this function now
-			return;
-		}
-
 		$scope.joining = true;
 
 		// create a new game
-		socket.emit('join_game', {name: $scope.game.name.trim(), player: $scope.player});
+		socket.emit('join_game', {player: $scope.player});
 	}
 
 	$scope.joinGame = function(){
@@ -150,6 +145,8 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		}
 
 		$scope.joining = true;
+
+		console.log(this.game);
 
 		socket.emit('join_game', {name: this.game.name, player: $scope.player});
 	}
@@ -200,6 +197,11 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		for(game in data.games){
 			$scope.games.push(data.games[game]);
 		}
+	})
+
+	// when your name is approved
+	socket.on('browsing', function(){
+		$scope.stage = 'browse_games';
 	})
 
 	// when you join a game
@@ -463,12 +465,16 @@ app.controller('cardsCtrl', function ($scope, socket) {
 	// when a game already has 11 players
 	socket.on('full_game', function(){
 		$scope.joining = false;
-		alert('This game is full');
+		alert('This game is full.');
 	})
 
 
 	socket.on('bad_setting', function(){
-		alert('Those settings will not work');
+		alert('Those settings will not work.');
+	})
+
+	socket.on('username_taken', function(){
+		alert('Someone already has that name.');
 	})
 
 

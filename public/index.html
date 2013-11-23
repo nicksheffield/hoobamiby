@@ -45,16 +45,9 @@
 
 		<div class="browse" ng-switch-when="browse_games">
 			<h2>Choose a game, or make your own</h2>
-
-			<form action="" class="pure-form pure-form-aligned">
-				<div class="pure-control-group">
-					<label for="room_name">Game Name</label>
-					<input type="text" id="room_name" ng-model="game.name" class="pure-input-1-3">
-				</div>
-				<div class="pure-controls">
-					<button class="pure-button pure-button-primary" ng-click="createGame()">Create Game</button>
-				</div>
-			</form>
+			
+			<button class="pure-button pure-button-primary" ng-click="createGame()">Create Game</button>
+			
 			<ul class="rooms">
 				<li ng-repeat="game in games">
 					<div class="title">{{game.name}}</div>
@@ -204,4 +197,3 @@
 	<script src="/assets/js/main.js"></script>
 </body>
 </html>
-

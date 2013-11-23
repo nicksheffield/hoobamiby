@@ -10,6 +10,7 @@
 	                                                                     d8888P 
 
 	By Nick Sheffield - numbereft@gmail.com
+	http://hoobamiby.com
 	
 	Change log
 
@@ -41,7 +42,8 @@
 			-Record of winning answers displayed at winner screen
 			-Support for expansions
 			Name saved in localStorage
-			-Name games after the user that made them
+			Name games after the user that made them
+			-No more than one player with the same name allowed to be connected
 
 
 
@@ -82,6 +84,7 @@ process.on('uncaughtException', function (exception) {
 var
 
 Games = {},
+connected_players = [],
 debug = true,
 
 
@@ -661,7 +664,7 @@ BlackCards = [
 	{text: "%s. It's a trap!", pick: 1},
 	{text: "Coming to Broadway this seasn, %s: The Musical.", pick: 1},
 	{text: "While the United States raced the Soviet Union to the moon, the Mexican government funneled millions of pesos into research on %s.", pick: 1},
-	{text: "After the earthwuake, Sean Penn brought %s to the people of Haiti.", pick: 1},
+	{text: "After the earthquake, Sean Penn brought %s to the people of Haiti.", pick: 1},
 	{text: "Next on ESPN2, the World Series of %s.", pick: 1},
 	{text: "Step 1: %s\\Step 2: %s2.\\Step 3: Profit", pick: 2},
 	{text: "Rumor has it that Vladimir Putin's favorite delicacy is %s stuffed with %s2.", pick: 2},
@@ -1160,13 +1163,65 @@ Symbols = [
 		var myplayer;
 
 
+		socket.on('browse', function(data){
+			for(var i=0;i<connected_players.length;i++){
+				if(connected_players[i].name == data.name){
+					socket.emit('username_taken');
+					return;
+				}
+			}
+
+
+			connected_players.push({
+				name: data.name,
+				socket_id: socket.id
+			})
+
+			socket.emit('browsing');
+			return;
+		})
+
 
 
 		socket.on('join_game', function(data){
 
 			debug && console.log('join_game 1');
 
-			if(Games[data.name] && Games[data.name].players.length == 11){
+			var gamename;
+
+			// if no game name was provided
+			if(typeof data.name == 'undefined'){
+
+				debug && console.log('join_game n1');
+
+				// create a game based off the users name
+				gamename = data.player.name;
+
+				if(data.player.name[data.player.name.length-1] == 's'){
+
+					debug && console.log('join_game n2');
+					gamename += '\' game';
+
+				}else{
+
+					debug && console.log('join_game n3');
+					gamename += '\'s game';
+
+				}		
+
+			// if the game name was provided
+			}else{
+						
+				debug && console.log('join_game n4');
+				
+				// connect to that game
+				gamename = data.name;
+			}
+
+			
+			debug && console.log('join_game 2');
+
+			if(Games[gamename] && Games[gamename].players.length == 11){
 				socket.emit('full_game');
 				return;
 			}
@@ -1174,8 +1229,8 @@ Symbols = [
 			// a flag that tells me if the game was newly created or not
 			var created = false;
 
-			if(room == '') room = data.name;
-			debug && console.log('join_game 2');
+			if(room == '') room = gamename;
+			debug && console.log('join_game 3');
 
 			// If the room doesn't exist
 			if(typeof Games[room] == undefined || !Games[room]){
@@ -1188,14 +1243,14 @@ Symbols = [
 				Games[room].name = room;
 			}
 
-			debug && console.log('join_game 3');
+			debug && console.log('join_game 4');
 
 			mygame = Games[room];
 
 			// join the room for this game
 			socket.join(room);
 
-			debug && console.log('join_game 4');
+			debug && console.log('join_game 5');
 
 			// ???
 			//data.player.socket_id = socket.id;
@@ -1205,7 +1260,7 @@ Symbols = [
 			player.name = process_player_name(Games[room], data.player.name.substr(0,15));
 			player.socket_id = socket.id;
 
-			debug && console.log('join_game 5');
+			debug && console.log('join_game 6');
 
 			myplayer = player;
 
@@ -1215,33 +1270,33 @@ Symbols = [
 				player.symbol = Symbols[parseInt(Math.random() * Symbols.length)];
 			}while(mygame.symbolsInUse.indexOf(player.symbol) != -1);
 			
-			debug && console.log('join_game 6');
+			debug && console.log('join_game 7');
 
 			// once we've found one that hasn't been used, record that we're using it now
 			mygame.symbolsInUse.push(player.symbol);
 			
-			debug && console.log('join_game 7');
+			debug && console.log('join_game 8');
 
 			// add them to it.
 			Games[room].players.push(player);
 			
-			debug && console.log('join_game 8');
+			debug && console.log('join_game 9');
 
 			// to you
 			socket.emit('game_joined', {socket: socket.id, room: Games[room], player: player});
 			
-			debug && console.log('join_game 9');
+			debug && console.log('join_game 10');
 
 			// to room
 			socket.broadcast.to(room).emit('player_joined', {player: player});
 			
-			debug && console.log('join_game 10');
+			debug && console.log('join_game 11');
 
 			// to all
 			if(created) io.sockets.emit('game_created', {room: Games[room]});
 			else io.sockets.emit('game_players_updated', {room: Games[room]});
 			
-			debug && console.log('join_game 11');
+			debug && console.log('join_game 12');
 
 
 			function process_player_name(game, player_name){
@@ -1266,7 +1321,7 @@ Symbols = [
 					return player_name;
 				}
 			}
-			debug && console.log('join_game /');
+			debug && console.log('join_game 13/');
 			debug && console.log('');
 
 			return;
@@ -1740,6 +1795,12 @@ Symbols = [
 			//release_hand(socket.id);
 
 			debug && console.log('disconnect 1');
+
+			for(var i=0;i<connected_players.length;i++){
+				if(connected_players[i].socket_id == socket.id){
+					connected_players.splice(i, 1);
+				}
+			}
 
 			for(game in Games){
 				var thisgame = Games[game];
