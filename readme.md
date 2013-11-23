@@ -16,7 +16,7 @@ dP    dP `88888P' `88888P' 88Y8888' `88888P8 dP  dP  dP dP 88Y8888' `8888P88
                                                                      d8888P 
 
 By Nick Sheffield - numbereft@gmail.com
-[http://hoobamiby.com](http://hoobamiby.com)
+http://hoobamiby.com
 
 Change log
 
@@ -49,8 +49,8 @@ Change log
 
 ###Todo
 
-	* Multi pick cards implemented
-	* Record of winning answers displayed at winner screen
-	* Support for expansions
-	* When czar leaves and the cards are revealed, everything bugs out
-	* Delay on winner screen
+*   Multi pick cards implemented
+*   Record of winning answers displayed at winner screen
+*   Support for expansions
+*   When czar leaves and the cards are revealed, everything bugs out
+*   Delay on winner screen
