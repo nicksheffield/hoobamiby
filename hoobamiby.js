@@ -39,11 +39,11 @@
 			Name saved in localStorage
 			Name games after the user that made them
 			No more than one player with the same name allowed to be connected
+			Delay on winner screen
 			-Multi pick cards implemented
 			-Record of winning answers displayed at winner screen
 			-Support for expansions
 			-When czar leaves and the cards are revealed, everything bugs out
-			-Delay on winner screen
 			-Late joining players don't see any cards
 
 

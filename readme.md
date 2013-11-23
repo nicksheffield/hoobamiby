@@ -25,4 +25,3 @@ Runs on node.js, using socket.io and angular.js
 *   Record of winning answers displayed at winner screen
 *   Support for expansions
 *   When czar leaves and the cards are revealed, everything bugs out
-*   Delay on winner screen
