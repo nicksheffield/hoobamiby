@@ -17,6 +17,7 @@ dP    dP `88888P' `88888P' 88Y8888' `88888P8 dP  dP  dP dP 88Y8888' `8888P88
 
 By Nick Sheffield - numbereft@gmail.com
 http://hoobamiby.com
+```
 
 Change log
 
@@ -45,7 +46,7 @@ Change log
 		Name saved in localStorage
 		Name games after the user that made them
 		No more than one player with the same name allowed to be connected
-```
+
 
 ###Todo
 
