@@ -1071,7 +1071,7 @@ Expansions = {
 		],
 		black: [
 			{text: "%s? Ten-outta-ten!", pick: 1},
-			{text: "AND YOU THINK THAT OF ME?\\I AM THE ONE WHO %s", pick: 1},
+			{text: "AND YOU THINK THAT OF ME?\\I AM THE ONE WHO IS %s", pick: 1},
 			{text: "Yeah! %s bitch!", pick: 1},
 			{text: "WHERE IS HE? %s", pick: 1}
 		]
