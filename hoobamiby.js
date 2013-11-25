@@ -40,6 +40,7 @@
 			Name games after the user that made them
 			No more than one player with the same name allowed to be connected
 			Delay on winner screen
+			Improved styles
 			-Multi pick cards implemented
 			-Record of winning answers displayed at winner screen
 			-Support for expansions
@@ -1201,7 +1202,7 @@ Symbols = [
 			
 			debug && console.log('join_game 2');
 
-			if(Games[gamename] && Games[gamename].players.length == 11){
+			if(Games[gamename] && Games[gamename].players.length == Games[gamename].player_limit){
 				socket.emit('full_game');
 				return;
 			}
@@ -1530,7 +1531,7 @@ Symbols = [
 				return;
 			}
 
-			if(parseInt(mygame.score_limit) <= 1 || isNaN(parseInt(mygame.score_limit))){
+			if(parseInt(mygame.score_limit) <= 1 || isNaN(parseInt(mygame.score_limit)) || mygame.player_limit > 11){
 				socket.emit('bad_setting');
 				debug && console.log('bad_setting /');
 				debug && console.log('');

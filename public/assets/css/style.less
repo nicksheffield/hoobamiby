@@ -1,6 +1,7 @@
-@yellow: #ffff66;
+@primary: #f1c40f;
+@secondary: #27ae60;
 @font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-@footer_height: 300px;
+@footer_height: 400px;
 
 *{
 	-webkit-box-sizing: border-box;
@@ -9,34 +10,35 @@
 }
 
 .transition(){
-	-webkit-transition: all 0.2s;
-	-moz-transition: all 0.2s;
-	-ms-transition: all 0.2s;
-	-o-transition: all 0.2s;
-	transition: all 0.2s;
+	-webkit-transition: all 0.1s;
+	-moz-transition: all 0.1s;
+	-ms-transition: all 0.1s;
+	-o-transition: all 0.1s;
+	transition: all 0.1s;
+}
+
+html{
+	height: 100%;
 }
 
 body{
 	font-family: @font;
-
-	padding: 100px 50px 400px;
+	background: #fff url(../img/gplaypattern.png);
+	height: 100%;
 }
 
 header{
 	position: absolute;
 	top: 0;
 	left: 0;
-	height: 50px;
 	width: 100%;
-	background: #222;
-
-	-webkit-font-smoothing: antialiased;
+	padding: 1em;
+	z-index: 9;
 
 	h1{
 		font-family: 'Open Sans', @font;
 		font-size: 1.3em;
 		font-weight: 100;
-		color: #fff;
 		margin: 0;
 		line-height: 50px;
 		padding: 0 0 0 1em;
@@ -49,49 +51,136 @@ header{
 		padding: 0;
 		float: right;
 		font-family: 'Open Sans', @font;
-		color: #fff;
-		font-weight: 100;
+		color: #000;
 
 		li{
 			float: right;
-			line-height: 50px;
+			line-height: 40px;
 			list-style: none;
 			padding: 0 1em;
 			font-size: 0.9em;
 			cursor: pointer;
-			background: #333;
+			border: 1px solid black;
+
+			margin-right: 1em;
 
 			.transition();
 
 			&:hover{
-				background: #444;
+				background: #000;
+				color: #fff;
+				box-shadow: 0 0 10px #000;
+
+				-webkit-font-smoothing: antialiased;
 			}
 
 			.fa{
 				padding-right: 1em;
 			}
+
+			&.slide{
+				width: 3em;
+				height: 3em;
+				overflow: hidden;
+
+				.transition();
+
+				&:hover{
+					width: 140px;
+				}
+			}
+		}
+	}
+
+	&.dark{
+		li{
+			border-color: #fff;
+			color: #fff;
+			background: #000;
+
+			&:hover{
+				background: #fff;
+				color: #000;
+				box-shadow: 0 0 10px #fff;
+			}
 		}
 	}
 }
 
-.container{
-	/*max-width: 1200px;
-	margin: 0 auto;
-	position: relative;*/
-	height: 100%;
-}
-
 .panel{
-	background: #eee;
-	border-bottom: 3px solid #ddd;
-	padding: 1em;
+	padding: 50px;
 }
 
+.container{
+	height: 60%;
+	overflow: auto;
+
+	&.full{
+		height: 100%;
+	}
+}
+
+.intro{
+	text-align: center;
+
+	h1{
+		font-size: 4em;
+		font-family: 'Open Sans';
+	}
+
+	h2{
+		font-family: Roboto;
+		font-style: italic;
+		font-weight: 100;
+	}
+
+	input{
+		padding: 0.5em 1em;
+		background: rgba(0, 0, 0, 0);
+		border: 1px solid #000;
+		font-size: 2em;
+		outline: 0;
+		margin: 1em;
+		font-weight: 100;
+		font-family: Roboto;
+		text-align: center;
+
+		&:focus{
+			background: #fff;
+		}
+	}
+
+	button{
+		background: rgba(0, 0, 0, 0);
+		border: 1px solid #000;
+		padding: 0.5em 1em;
+		outline: 0;
+		background: #fff;
+
+		&:hover{
+			background: #000;
+			color: #fff;
+			box-shadow: 0 0 10px #000;
+		}
+	}
+}
+
+.setup{
+
+	h2{
+		font-size: 3em;
+		font-weight: 100;
+		font-family: Roboto;
+		margin: 0;
+		padding-bottom: 0.5em;
+		border-bottom: 1px solid #DDD;
+		margin-bottom: 0.5em;
+	}
+}
 
 .game{}
 
 .browse{
-
 
 	.rooms{
 		padding: 0;
@@ -100,49 +189,103 @@ header{
 
 		li{
 			padding: 1em;
-			border-radius: 3px;
-			background: #eee;
 			margin: 1em 0;
 			position: relative;
 			line-height: 150%;
+			width: 300px;
+			background: #fff;
+			border: 1px solid #000;
+			min-height: 300px;
+			display: inline-block;
+			margin: 0 1em;
+			cursor: pointer;
+
+			.transition();
+
+			&:hover{
+				background: #000;
+				color: #fff;
+				box-shadow: 0 0 10px #000;
+
+				.join_button{
+					background: #fff;
+					color: #000;
+				}
+			}
 
 			.title{
 				font-weight: bold;
+				font-size: 2em;
+				margin: 0 0 1em 0;
 			}
 
 			.info{
-				font-style: italic;
+				font-size: 0.9em;
 			}
 
 			.join_button{
 				position: absolute;
-				top: 1.5em;
-				right: 1.5em;
+				bottom: 0;
+				left: 0;
+				background: #000;
+				border: none;
+				color: #FFF;
+				-webkit-font-smoothing: antialiased;
+				width: 100%;
+				line-height: 2em;
+
+				.transition();
+			}
+
+			&.no-games{
+				background: none;
+				border: none;
 			}
 		}
 	}
 }
 
 .player{
-	position: fixed;
-	bottom: 0;
-	left: 0;
-	height: 300px;
 	width: 100%;
-	z-index: 99;
-	background: #fff;
-	border-top: 2px solid #eee;
+	border-top: 1px solid #000;
+	background: #fff url(../img/gplaypattern.png);
+	height: 40%;
+
+	h2{
+		border-right: 1px solid #000;
+		padding: 0.5em;
+		margin: 0;
+		font-size: 1em;
+		color: #FFF;
+		background: #000;
+		-webkit-font-smoothing: antialiased;
+	}
+
+	.left{
+		width: 20%;
+		height: 100%;
+		float: left;
+	}
+
+	.right{
+		width: 80%;
+		height: 100%;
+		float: right;
+		position: relative;
+	}
 
 	.players{
-		padding: 1em;
+		padding: 0em;
 		margin: 0;
-		height: 300px;
+		height: -webkit-calc(~"100% - 35px");
 		overflow: auto;
-		border-right: 2px solid #eee;
+		border-right: 1px solid #000;
 
 		li{
 			list-style: none;
-			padding: 0.5em;
+			padding: 1em;
+			border-bottom: 1px solid #000;
+			font-size: 0.8em;
 
 			.fa{
 				padding-right: 1em;
@@ -153,39 +296,38 @@ header{
 			}
 
 			&.czar{
-				background: #000;
-				color: @yellow;
-				border-radius: 3px;
+				font-weight: bold;
+				background: @secondary;
+				color: #fff;
 				-webkit-font-smoothing: antialiased;
 			}
 
 			&.winner{
-				background: @yellow;
+				background: @primary;
 				color: #000;
-				border-radius: 3px;
 			}
 		}
 	}
 
 	.hand{
 		position: relative;
-		height: 300px;
+		height: -webkit-calc(~"100% - 35px");
 		overflow: auto;
-		
-		.you-are-czar{
+	}
+
+	.you-are-czar{
 			position: absolute;
-			top: 0;
+			top: 35px;
 			left: 0;
 			width: 100%;
-			height: 300px;
+			height: -webkit-calc(~"100% - 35px");
 
 			background: rgba(255,255,255,0.8);
 			color: #000;
 			text-align: center;
-			line-height: 300px;
 			font-size: 3em;
+			z-index: 9;
 		}
-	}
 }
 
 .setup{
@@ -201,20 +343,6 @@ header{
 		label{
 			line-height: 1.5em;
 		}
-
-		.pure-button-large {
-			font-size: 110%;
-		}
-
-		.pure-button-xlarge {
-			font-size: 125%;
-		}
-
-		/*.start-button{
-			position: absolute;
-			top: 1em;
-			right: 1em;
-		}*/
 	}
 }
 
@@ -226,7 +354,6 @@ header{
 	padding: 16px;
 	float: left;
 	margin: 8px;
-	border-radius: 5px;
 	position: relative;
 	hyphens: auto;
 
@@ -244,7 +371,7 @@ header{
 	}
 
 	&.choose:hover, &.chosen{
-		background: @yellow;
+		background: @primary;
 	}
 
 	&.chosen:not(.small) .star{
@@ -259,6 +386,7 @@ header{
 		font-size: 2em;
 		font-family: Roboto;
 		font-weight: 300;
+		margin: 0;
 
 		-webkit-font-smoothing: antialiased;
 	}
@@ -299,7 +427,7 @@ header{
 	}
 
 	span.answer{
-		color: @yellow;
+		color: @primary;
 
 		&.newline{
 			margin-top: 1em;
