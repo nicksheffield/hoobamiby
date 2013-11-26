@@ -93,21 +93,40 @@
 					<input type="range" min="2" max="11" id="player_limit" ng-model="game.player_limit" ng-change="changeSetting('player_limit')" ng-disabled="!player.host">
 				</div>
 
-				<!--<div class="pure-u-1-2">
-					<h3>Expansions</h3>
+				<div class="expansions">
+					<h2>Expansions</h2>
 
-					<label for="expansion_1">
-						<input type="checkbox" id="expansion_1" ng-model="game.expansions.first"> First Expansion
-					</label>
+					<div class="row">
+						<label for="expansion_1">
+							<input type="checkbox" id="expansion_1" ng-model="game.expansions.first" ng-change="changeSettingObj('expansions', 'first')" ng-disabled="!player.host"> First Expansion
+						</label>
+					</div>
+					
+					<div class="row">
+						<label for="expansion_2">
+							<input type="checkbox" id="expansion_2" ng-model="game.expansions.second" ng-change="changeSettingObj('expansions', 'second')" ng-disabled="!player.host"> Second Expansion
+						</label>
+					</div>
 
-					<label for="expansion_2">
-						<input type="checkbox" id="expansion_2" ng-model="game.expansions.second"> Second Expansion
-					</label>
+					<div class="row">
+						<label for="expansion_3">
+							<input type="checkbox" id="expansion_3" ng-model="game.expansions.third" ng-change="changeSettingObj('expansions', 'third')" ng-disabled="!player.host"> Third Expansion
+						</label>
+					</div>
 
-					<label for="expansion_3">
-						<input type="checkbox" id="expansion_3" ng-model="game.expansions.third"> Third Expansion
-					</label>
-				</div> -->
+					<div class="row">
+						<label for="expansion_p">
+							<input type="checkbox" id="expansion_p" ng-model="game.expansions.pax" ng-change="changeSettingObj('expansions', 'pax')" ng-disabled="!player.host"> Pax East 2013 Expansion
+						</label>
+					</div>
+
+					<div class="row">
+						<label for="expansion_n">
+							<input type="checkbox" id="expansion_n" ng-model="game.expansions.nigrahs" ng-change="changeSettingObj('expansions', 'nigrahs')" ng-disabled="!player.host"> Nigrahs Expansion
+						</label>
+					</div>
+					
+				</div>
 			</form>
 		</div>
 

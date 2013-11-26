@@ -49,16 +49,6 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		current_black: [],
 		expansions: {},
 		winner: {},
-
-		house_rules: {
-			happy_ending: false,
-			rebooting: false,
-			packing: false,
-			rando: false,
-			survival: false,
-			business: false,
-			neverever: false
-		}
 	}
 
 	$scope.player = {
@@ -90,8 +80,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 	
 
 	$scope.start = function(){
-		socket.emit('game_started');
-		socket.emit('request_black');
+		socket.emit('game_started', {game: $scope.game});
 	}
 
 	$scope.displayAnswer = function(answer){
@@ -150,6 +139,16 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		if(!$scope.player.host) return;
 		var settings = {};
 		settings[setting] = $scope.game[setting];
+
+		socket.emit('change_setting', {game: $scope.game.name, settings: settings});
+	}
+
+
+	$scope.changeSettingObj = function(setting, prop){
+		if(!$scope.player.host) return;
+		var settings = {};
+		if(typeof settings[setting] == 'undefined') settings[setting] = {};
+		settings[setting][prop] = $scope.game[setting][prop];
 
 		socket.emit('change_setting', {game: $scope.game.name, settings: settings});
 	}
@@ -267,6 +266,18 @@ app.controller('cardsCtrl', function ($scope, socket) {
 				break;
 			}
 		}
+
+		if(data.name == $scope.game.name){
+			alert('The game was closed because there was not enough players');
+			$scope.game.name = '';
+			$scope.game.players = [];
+			$scope.game.current_answer = $scope.blank_answer;
+
+			$scope.player.hand = [];
+			$scope.player.czar = false;
+
+			$scope.stage = 'browse_games';
+		}
 	})
 
 
@@ -316,6 +327,11 @@ app.controller('cardsCtrl', function ($scope, socket) {
 	socket.on('start_game', function(data){
 		$scope.stage = 'game';
 
+		if($scope.player.host){
+			socket.emit('request_black');
+		}
+	
+
 		// if the czar is you
 		if(data.czar.socket_id == $scope.player.socket_id){
 			// set you as the czar
@@ -354,6 +370,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 
 		if(data.card.pick != 1){
 			socket.emit('request_black');
+			console.log('requesting a new black card');
 			return;
 		}
 
@@ -509,6 +526,10 @@ app.controller('cardsCtrl', function ($scope, socket) {
 
 	socket.on('username_taken', function(){
 		alert('Someone already has that name.');
+	})
+
+	socket.on('not_enough_players', function(){
+		alert('Not enough players to play.');
 	})
 
 

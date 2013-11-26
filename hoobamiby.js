@@ -44,7 +44,9 @@
 			When czar leaves and the cards are revealed, everything no longer bugs out
 			Late joining players can see cards, but not make a move until the next round
 			Proper grammar put in white cards. Sentence injection be damned
-			Support for expansions (server side)
+			Support for expansions
+			Game closes when there is less than 3 players
+			Game cannot be started if there is less than 3 players
 
 			-Multi pick cards implemented
 			-Record of winning answers displayed at winner screen
@@ -116,6 +118,7 @@ Game = function() {
 							first:    true,
 							second:   true,
 							third:    true,
+							pax:      true,
 							nigrahs:  true
 						};
 
@@ -1210,17 +1213,6 @@ Symbols = [
 				Games[room] = new Game();
 				// name it
 				Games[room].name = room;
-
-				// create the list of cards available from all the expansions
-				for(expansion in Games[room].expansions){
-					var exp = Expansions[expansion];
-
-					if(Games[room].expansions[expansion]){
-						Games[room].cards = Games[room].cards.concat(exp.white);
-						Games[room].blacks = Games[room].blacks.concat(exp.black);
-					}
-					
-				}
 			}
 
 			debug && console.log('join_game 4');
@@ -1410,7 +1402,7 @@ Symbols = [
 			debug && console.log('leave_game 5');
 
 			// check if the players list is empty
-			if(thisgame.players.length == 0){
+			if(thisgame.players.length < 3){
 				// if so, close this game.
 				delete Games[data.name];
 
@@ -1555,7 +1547,7 @@ Symbols = [
 
 
 
-		socket.on('game_started', function(){
+		socket.on('game_started', function(data){
 			debug && console.log('game_started 1');
 
 			if(!mygame){
@@ -1572,9 +1564,29 @@ Symbols = [
 				return;
 			}
 
+			if(mygame.players.length < 3){
+				socket.emit('not_enough_players');
+				debug && console.log('not_enough_players /');
+				debug && console.log('');
+				return;
+			}
+
 			mygame.score_limit = parseInt(mygame.score_limit);
 
 			mygame.started = true;
+
+			mygame.expansions = data.game.expansions;
+
+			// create the list of cards available from all the expansions
+			for(expansion in mygame.expansions){
+				var exp = Expansions[expansion];
+
+				if(mygame.expansions[expansion]){
+					mygame.cards = mygame.cards.concat(exp.white);
+					mygame.blacks = mygame.blacks.concat(exp.black);
+				}
+				
+			}
 
 			// choose the czar
 			var theczar = mygame.players[parseInt(Math.random() * mygame.players.length)];
@@ -1885,7 +1897,7 @@ Symbols = [
 				debug && console.log('disconnect 3');
 
 				// check if the players list is empty
-				if(thisgame.players.length == 0){
+				if(thisgame.players.length < 3){
 					// if so, close this game.
 					delete Games[game];
 
