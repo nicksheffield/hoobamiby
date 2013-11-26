@@ -41,11 +41,14 @@
 			No more than one player with the same name allowed to be connected
 			Delay on winner screen
 			Improved styles
+			When czar leaves and the cards are revealed, everything no longer bugs out
+			Late joining players can see cards, but not make a move until the next round
+			Proper grammar put in white cards. Sentence injection be damned
+			Support for expansions (server side)
+
 			-Multi pick cards implemented
 			-Record of winning answers displayed at winner screen
-			-Support for expansions
-			-When czar leaves and the cards are revealed, everything bugs out
-			-Late joining players don't see any cards
+			-Add random name chooser or generator
 
 
 
@@ -85,28 +88,36 @@ process.on('uncaughtException', function (exception) {
 
 var
 
-Games = {},
-connected_players = [],
-debug = true,
+Games                   = {},
+connected_players       = [],
+debug                   = true,
 
 
 Game = function() {
 	this.name           = '';
 	this.password       = '';
-	this.players        = [];
-	this.house_rules    = [];
-	this.expansions     = { first: true, second: true, third: true };
-	this.current_black  = [];
-	this.current_whites = [];
 	this.score_limit    = 8;
 	this.player_limit   = 11;
-	this.show_password  = true;
-	this.started        = false;
-	this.current_answer = '________';
+	this.players        = [];
+	this.house_rules    = [];
+	this.current_black  = [];
+	this.current_whites = [];
+	this.cards          = [];
+	this.blacks         = [];
 	this.cardsInUse     = [];
 	this.blacksInUse    = [];
 	this.symbolsInUse   = [];
+	this.show_password  = true;
+	this.started        = false;
 	this.chosen	        = false;
+	this.current_answer = '________';
+	this.expansions     = {
+							original: true,
+							first:    true,
+							second:   true,
+							third:    true,
+							nigrahs:  true
+						};
 
 	return this;
 },
@@ -115,603 +126,580 @@ Game = function() {
 Player = function() {
 	this.name           = '';
 	this.symbol         = '';
+	this.socket_id      = '';
 	this.score          = 0;
-	this.czar           = false;
 	this.played_card    = [];
 	this.hand           = [];
-	this.socket_id      = '';
+	this.czar           = false;
 	this.winner         = false;
+	this.active         = false;
 
 	return this;
 },
 
-
-//source: http://s3.amazonaws.com/cah/CAH_MainGame.pdf
-WhiteCards = [
-	'being on fire',
-	'racism',
-	'old-people smell',
-	'a micropenis',
-	'women in yogurt commercials',
-	'classist undertones',
-	'not giving a shit about the Third World',
-	'sexting',
-	'roofies',
-	'a windmill full of corpses',
-	'the gays',
-	'an oversized lollipop',
-	'African children',
-	'an asymmetric boob job',
-	'bingeing and purging',
-	'the hardworking Mexican',
-	// 'an Oedipus complex',
-	'a tiny horse',
-	'boogers',
-	'penis envy',
-
-	'Barack Obama',
-	'my humps',
-	// 'the Tempur-Pedic Swedish Sleep System',
-	'Scientology',
-	'dry heaving',
-	'Skeletor',
-	'Darth Vader',
-	'figgy pudding',
-	'advice from a wise, old black man',
-	'Five-Dollar Footlongs',
-	'elderly Japanese men',
-	'free samples',
-	'estrogen',
-	'sexual tension',
-	'famine',
-	'a stray pube',
-	'men',
-	'heartwarming orphans',
-	'genital piercings',
-	'a bag of magic beans',
-
-	'repression',
-	'prancing',
-	'my relationship status',
-	'overcompensation',
-	'peeing a little bit',
-	'pooping back and forth, forever',
-	'eating all of the cookies before the AIDS bake-sale',
-	'testicular torsion',
-	'the Devil himself',
-	'the World of Warcraft',
-	'Dick Cheney',
-	'MechaHitler',
-	'being fabulous',
-	'pictures of boobs',
-	'a gentle caress of the inner thigh',
-	'the Amish',
-	// 'Pabst Blue Ribbon',
-	'Lance Armstrong\'s missing testicle',
-	'pedophiles',
-	'The Pope',
-
-	'flying sex snakes',
-	'Emma Watson',
-	'my ex-wife',
-	'sexy pillow fights',
-	'another goddamn vampire movie',
-	'cybernetic enhancements',
-	'civilian casualties',
-	'scrubbing under the folds',
-	'the female orgasm',
-	'bitches',
-	'the Boy Scouts of America',
-	'Auschwitz',
-	'finger painting',
-	'the Care Bear Stare',
-	'the Jews',
-	'being marginalized',
-	'the blood of christ',
-	'dead parents',
-	'the art of seduction',
-	'dying of dysentery',
-
-	'Mr. Clean, right behind you',
-	'jewish fraternities',
-	// 'Hot Pockets',
-	'Natalie Portman',
-	'agriculture',
-	'Judge Judy',
-	'surprise sex!',
-	'the homosexual agenda',
-	'Robert Downey Jr.',
-	'the Trail of Tears',
-	'an M. Night Shyamalan plot twist',
-	'funky fresh rhymes',
-	'the light of a billion suns',
-	'amputees',
-	'throwing a virgin into a volcano',
-	'Italians',
-	'explosions',
-	'a good sniff',
-	'destroying the evidence',
-	
-	'children on leashes',
-	'catapults',
-	'one trillion dollars',
-	'establishing dominance',
-	'dying',
-	'silence',
-	'growing a pair',
-	'YOU MUST CONSTRUCT ADDITIONAL PYLONS',
-	'Justin Bieber',
-	'The Holy Bible',
-	'balls',
-	'praying the gay away',
-	'teenage pregnancy',
-	'german dungeon porn',
-	'the invisible hand',
-	'my inner demons',
-	'powerful thighs',
-	'getting naked and watching Nickelodeon',
-	'crippling debt',
-	'Kamikaze pilots',
-	
-	'teaching a robot to love',
-	'police brutality',
-	'horse meat',
-	'all-you-can-eat shrimp for $4.99',
-	'hetero-normativity',
-	'Michael Jackson',
-	'a really cool hat',
-	'copping a feel',
-	'crystal meth',
-	'shapeshifters',
-	'fingering',
-	'a disappointing birthday party',
-	'dental dams',
-	'my soul',
-	'the unstoppable tide of islam',
-	'the chronic',
-	'eugenics',
-	'synergistic management solutions',
-	'RoboCop',
-	// 'serfdom',
-
-	'Stephen Hawking talking dirty',
-	'tangled slinkys',
-	'fiery poops',
-	'public ridicule',
-	'that thing that electrocutes your abs',
-	'picking up girls at the abortion clinic',
-	'object permanence',
-	// 'GoGurt',
-	'lockjaw',
-	'attitude',
-	'passable transvestites',
-	'wet dreams',
-	'the dance of the Sugar Plum Fairy',
-	'firing a rifle into the air while balls deep in a squealing hog',
-	'panda sex',
-	'necrophilia',
-	'grave robbing',
-	'a bleached asshole',
-	'Muhammad (Peaise Be Unto Him)',
-	'multiple stab wounds',
-
-	'stranger danger',
-	'a monkey smoking a cigar',
-	'smegma',
-	'a live studio audience',
-	'making a pouty face',
-	'the violation of our most basic human rights',
-	'unfathomable stupidity',
-	'sunshine and rainbows',
-	'whipping it out',
-	'the token minority',
-	'the terrorists',
-	'the three-fifths compromise',
-	'a snapping turtle biting the tip of your penis',
-	'vehicular manslaughter',
-	'the Freat Depression',
-	'emotions',
-	'getting so angry you pop a boner',
-	'same-sex ice dancing',
-	'an M16 assault rifle',
-	'man meat',
-	
-	'incest',
-	'David Bowie flying in on a tiger made of lightning',
-	'flightless birds',
-	'doing the right thing',
-	'when you fart and a little bit comes out',
-	'frolicking',
-	'being a dick to children',
-	'poopy diapers',
-	// 'tickling Sean Hannity, even after he tells you to stop.',
-	'raptor attacks',
-	'swooping',
-	'concealing a boner',
-	'full frontal nudity',
-	'vigorous jazz hands',
-	'nipple blades',
-	'a bitch slap',
-	'Michelle Obama\'s arms',
-	'mouth herpes',
-	'a robust mongoloid',
-	'mutually-assured destruction',
-	
-	'the Rapture',
-	'road head',
-	'Stalin',
-	'lactation',
-	'Hurricane Katrina',
-	'the true meaning of Christmas',
-	'self-loathing',
-	'a brain tumor',
-	'dead babies',
-	'new age music',
-	'a thermonuclear detonation',
-	'geese',
-	'Kanye West',
-	'God',
-	'a spastic nerd',
-	'Harry Potter erotica',
-	'kids with ass cancer',
-	'lumberjack fantasies',
-	'the American Dream',
-	'puberty',
-	
-	'sweet, sweet vengeance',
-	'winking at old people',
-	'the taint; the grundle; the fleshy fun-bridge',
-	'oompa-loompas',
-	'authentic Mexican cuisine',
-	'preteens',
-	'The Little Engine That Could',
-	'guys who don\'t call',
-	'erectile dysfunction',
-	'parting the Red Sea',
-	'Rush Limbaugh\'s soft, shitty body',
-	'a saxophone solo',
-	'land mines',
-	// 'capturing Newt Gingrich and forcing him to dance in a monkey suit',
-	'me time',
-	'Nickelback',
-	'vigilante justice',
-	'the south',
-	'opposable thumbs',
-	'ghosts',
-	
-	'alcoholism',
-	'poorly timed holocaust jokes',
-	'inappropriate yodeling',
-	'battlefield amputations',
-	'exactly what you\'d expect',
-	'a time travel paradox',
-	'AXE Body Spray',
-	'actually taking candy from a baby',
-	'leaving an awkward voicemail',
-	'a sassy black woman',
-	'being a motherfucking sorcerer',
-	'a mopey zoo lion',
-	'a murder most foul',
-	'a falcon with a cap on its head',
-	'farting and walking away',
-	'a mating display',
-	'the Chinese gymnastics team',
-	'friction',
-	'Asians who aren\'t good at math',
-	'fear itself',
-	
-	'a can of whoop-ass',
-	'yeast',
-	// 'lunchables',
-	'licking things to claim them as your own',
-	'Vikings',
-	'the Kool-Aid Man',
-	'hot cheese',
-	'Nicolas Cage',
-	'a defective condom',
-	'the inevitable heat death of the universe',
-	'republicans',
-	'William Shatner',
-	'tentacle porn',
-	'sperm whales',
-	'Lady Gaga',
-	'chunks of dead prostitute',
-	'gloryholes',
-	'daddy issues',
-	'a mime having a stroke',
-	'white people',
-	
-	'a lifetime of sadness',
-	'tasteful sideboob',
-	'a sea of troubles',
-	'Nazis',
-	'a cooler full of organs',
-	'giving 110%',
-	'doin\' it in the butt',
-	'John Wilkes booth',
-	'obesity',
-	'a homoerotic volleyball montage',
-	'puppies!',
-	'natural male enhancements',
-	'brown people',
-	'dropping a chandelier on your enemies and riding the rope up',
-	'soup that is too hot',
-	'porn stars',
-	'hormone injections',
-	'pulling out',
-	'the Big Bang',
-	// 'switching to Geico',
-	
-	'wearing underwear inside-out to avoid doing laundry',
-	'rehab',
-	'Christopher Walken',
-	'count chocula',
-	'the hamburglar',
-	'not reciprocating oral sex',
-	// 'Aaron Burr',
-	'hot people',
-	'foreskin',
-	'assless chaps',
-	'the miracle of childbirth',
-	'waiting \'til marriage',
-	'two midgets shitting into a bucket',
-	// 'adderall',
-	'a sad handjob',
-	'cheating in the Special Olympics',
-	'the glass ceiling',
-	'the hustle',
-	'getting drunk on mouthwash',
-	'swag',
-	
-	'breaking out into song and dance',
-	'a Super Soaker full of cat pee',
-	'the underground railroad',
-	// 'home video of Oprah sobbing into a Lean Cuisine',
-	'the Rev. Dr. Martin Luther King, Jr.',
-	'extremely tight pants',
-	'third base',
-	'waking up half-naked in a Denny\'s parking lot',
-	'golden showers',
-	'white privilege',
-	'hope',
-	'taking off your shirt',
-	'smallpox blankets',
-	'ethnic cleansing',
-	'queefing',
-	'helplessly giggling at the mention of Hutus and tutus',
-	'getting really high',
-	'natural selection',
-	'a gassy antelope',
-	'my sex life',
-	
-	'Arnold Schwarze-negger',
-	'pretending to care',
-	'Ronald Reagan',
-	// 'Toni Morrison\'s vagina',
-	'an ugly face',
-	'a death ray',
-	'BATMAN!!!',
-	'homeless people',
-	'racially-biased SAT question',
-	'centaurs',
-	'a salty surprise',
-	'72 virgins',
-	'embryonic stem cells',
-	'pixelated bukkake',
-	// 'seppuku',
-	'an icepick lobotomy',
-	'Stormtroopers',
-	'menstrual rage',
-	'passing a kidney stone',
-	'an uppercut',
-	
-	'Shaquille O\'Neal\'s acting career',
-	'horrifying laser hair removal accidents',
-	'autocannibalism',
-	'a fetus',
-	'riding off into the sunset',
-	'goblins',
-	'eating the last known bison',
-	'shiny objects',
-	'being rich',
-	// 'a Bop It',
-	'leprosy',
-	'world peace',
-	'dick fingers',
-	'chainsaws for hands',
-	'the Make-A-Wish Foundation',
-	'Britney Spears at 55',
-	'laying an egg',
-	'the folly of man',
-	'my genitals',
-	'grandma',
-	
-	'flesh-eating bacteria',
-	'poor people',
-	'50,000 volts straight to the nipples',
-	'active listening',
-	'strong female characters',
-	'poor life choices',
-	'altar boys',
-	'my vagina',
-	'Pac-Man uncontrollably guzzling cum',
-	'sniffing glue',
-	'the placenta',
-	'the profoundly handicapped',
-	'spontaneous human combustion',
-	'the KKK',
-	'the clitoris',
-	'not wearing pants',
-	'consensual sex',
-	'black people',
-	'a bucket of fish heads',
-	'hospice care',
-	
-	'passive aggressive post-it notes',
-	// 'Fancy Feast',
-	'the heart of a child',
-	'sharing needles',
-	'scalping',
-	'being fat and stupid',
-	'getting married, having a few kids, buying some stuff, retiring to Florida and dying',
-	'Sean Penn',
-	'Sean Connery',
-	'expecting a burp and vomiting on the floor',
-	'wifely duties',
-	'a pyramid of severed heads',
-	'Genghis Khan',
-	'historically black colleges',
-	'crucifixion',
-	'a subscription to Men\'s Fitness',
-	'the milk man',
-	'friendly fire',
-	'women\'s suffrage',
-	'AIDS',
-	
-	'former president George W. Bush',
-	'8 oz. of sweet Mexican black-tar heroin',
-	'half-assed foreplay',
-	'edible underpants',
-	'my collection of high-tech sex toys',
-	'The Force',
-	'Bees?',
-	'some god-damn peace and quiet',
-	'jerking off into a pool of children\'s tears',
-	'a micropig wearing a tiny raincoat and booties',
-	'a hot mess',
-	'masturbation',
-	'Tom Cruise',
-	'a balanced breakfast',
-	'anal beads',
-	'drinking alone',
-	'Cards Against Humanity',
-	'coat hanger abortions',
-	'used panties',
-	'cuddling',
-	
-	'wiping her butt',
-	// 'Domino\'s Oreo Dessert Pizza',
-	'a zesty breakfast burrito',
-	'Morgan Freeman\'s voice',
-	'a middle-aged man on roller skates',
-	'Ghandi',
-	// 'The penny whistle solo from "My Heart Will Go On."',
-	'spectacular abs',
-	'Keanu Reeves',
-	'child beauty pageants',
-	'child abuse',
-	'Bill Nye the Science Guy',
-	'science',
-	'a tribe of warrior women',
-	'Viagra',
-	'Her Majesty, Queen Elizabeth II',
-	'The entire Mormon Tabernacle Choir',
-	'Hulk Hogan',
-	'take-backsies',
-	'an erection that lasts longer than four hours'
-],
-
-
 // the \\ denotes a <br>
-BlackCards = [
-	{text: "How did I lose my virginity? %s", pick: 1},
-	{text: "Why can't I sleep at night? %s", pick: 1},
-	{text: "What's that smell? %s", pick: 1},
-	{text: "I got 99 problems but %s ain't one.", pick: 1},
-	{text: "Maybe she's born with it. Maybe it's %s.", pick: 1},
-	{text: "What's the next Happy Meal toy? %s", pick: 1},
-	{text: "Here is the church,\\Here is the steeple,\\Open the doors and there is %s.", pick: 1},
-	{text: "It's a pity that kids these days are all involved with %s.", pick: 1},
-	{text: "During his childhood, Salvador Dali produced hundreds of paintings of %s.", pick: 1},
-	{text: "Alternative medicine is now embracing the curative powers of %s.", pick: 1},
-	{text: "And the Academy Award for %s goes to %s2.", pick: 2},
-	{text: "What's that sound? %s", pick: 1},
-	{text: "What ended my last relationship? %s", pick: 1},
-	{text: "MTV's new reality show features eight washed-up celebrities living with %s.", pick: 1},
-	{text: "I drink to forget %s.", pick: 1},
-	{text: "I'm sorry professor, but I couldn't complete my homework because of %s.", pick: 1},
-	{text: "What is Batman's guilty pleasure? %s", pick: 1},
-	{text: "This is the way the world ends\\This is the way the world ends\\Not with a bang but with %s.", pick: 1},
-	{text: "What's a girls best friend? %s", pick: 1},
-	{text: "TSA guidelines now prohibit %s on airplanes.", pick: 1},
-
-	{text: "%s. That's how I want to die.", pick: 1},
-	{text: "For my next trick, I will pull %s out of %s2.", pick: 2},
-	{text: "In the new Disney Channel Original Movie, Hannah Montana struggles with %s for the first time.", pick: 1},
-	{text: "%s is a slippery slope that leads to %s2.", pick: 2},
-	{text: "What does Dick Cheney prefer?  %s", pick: 1},
-	{text: "Dear Abby, I'm having some trouble with %s and would like your advice.", pick: 1},
-	{text: "Instead of coal, santa now gives the bad children %s.", pick: 1},
-	{text: "What's the most emo? %s", pick: 1},
-	{text: "In 1,000 years, when paper money is a distant memory, how will we pay for goods and services? %s", pick: 1},
-	{text: "What's the next superhero/sidekick duo? %s and %s2", pick: 2},
-	{text: "In M. Night Shyamalan's new movie, Bruce Willis discoveries that %s had really been %s2 all along.", pick: 2},
-	{text: "A romantic, candlelit dinner would be incomplete without %s.", pick: 1},
-	{text: "%s. Betcha can't just have one!", pick: 1},
-	{text: "White people like %s.", pick: 1},
-	{text: "%s. High five, bro.", pick: 1},
-	{text: "Next from J.K. Rowling: Harry Potter and the Chamber of %s.", pick: 1},
-	{text: "BILLY MAYS HERE FOR %s.", pick: 1},
-	{text: "In a world ravaged by %s our only solace is %s2.", pick: 2},
-	{text: "War! What is it good for? %s", pick: 1},
-	{text: "During sex, I like to think about %s.", pick: 1},
-
-	{text: "What are my parents hiding from me? %s", pick: 1},
-	{text: "What will always get you laid? %s", pick: 1},
-	{text: "in L.A. County Jail, word is you can trade 200 cigarettes for %s.", pick: 1},
-	{text: "What did I bring back from Mexico? %s", pick: 1},
-	{text: "What don't you want to find in your Kung Pao chicken? %s", pick: 1},
-	{text: "What will I bring back in time to convince people that I am a powerful wizard? %s", pick: 1},
-	{text: "How am I maintaining my relationship status? %s", pick: 1},
-	{text: "%s. It's a trap!", pick: 1},
-	{text: "Coming to Broadway this season, %s: The Musical.", pick: 1},
-	{text: "While the United States raced the Soviet Union to the moon, the Mexican government funneled millions of pesos into research on %s.", pick: 1},
-	{text: "After the earthquake, Sean Penn brought %s to the people of Haiti.", pick: 1},
-	{text: "Next on ESPN2, the World Series of %s.", pick: 1},
-	{text: "Step 1: %s.\\Step 2: %s2.\\Step 3: Profit", pick: 2},
-	{text: "Rumor has it that Vladimir Putin's favorite delicacy is %s stuffed with %s2.", pick: 2},
-	{text: "Before I kill you, Mr Bond, I must show you %s.", pick: 1},
-	{text: "What gives me uncontrollable gas? %s", pick: 1},
-	{text: "What do old people smell like? %s", pick: 1},
-	{text: "The class field trip was completely ruined by %s.", pick: 1},
-	{text: "When Pharoh remained unmoved, Moses called down a plague of %s.", pick: 1},
-	{text: "What's my secret power? %s", pick: 1},
-	
-	{text: "What's there a ton of in heaven? %s", pick: 1},
-	{text: "What would grandma find disturbing, yet oddly charming? %s", pick: 1},
-	{text: "I never truly understood %s until I encountered %s2.", pick: 2},
-	{text: "What did the U.S. airdrop to the children of Afghanistan? %s", pick: 1},
-	{text: "What helps Obama unwind? %s", pick: 1},
-	{text: "What did Vin Diesel eat for diner? %s", pick: 1},
-	{text: "%s: good to the last drop.", pick: 1},
-	{text: "Why am I sticky? %s", pick: 1},
-	{text: "What gets better with age? %s", pick: 1},
-	{text: "%s: kid-tested, mother-approved.", pick: 1},
-	{text: "Daddy, why is mommy crying? %s", pick: 1},
-	// {text: "What's Teach for America using to inspire inner city students to succeed? %s", pick: 1},
-	{text: "Studies show that lab rats navigate mazes 50% faster after being exposed to %s.", pick: 1},
-	{text: "Life for American Indians was forever changed when the White Man introduced them to %s.", pick: 1},
-	{text: "I do not know what weapons World War III will be fought with, but World War IV will be fought with %s.", pick: 1},
-	{text: "Why do I hurt all over? %s", pick: 1},
-	{text: "What am I giving up for Lent? %s", pick: 1},
-	{text: "In Michael Jackson's final moments, he thought about %s.", pick: 1},
-	{text: "The Smithsonian Museum of Natural History has just opened an interactive exhibit on %s.", pick: 1},
-	{text: "When I am the President of the United States, I will create the Department of %s.", pick: 1},
-	{text: "Lifetime presents %s, the story of %s2.", pick: 2},
-	{text: "When I am a billionaire, I shall erect a 50-foot statue to commemorate %s.", pick: 1},
-	{text: "When I was tripping on acid, %s turned into %s2.", pick: 2},
-	{text: "that's right, I killed %s. How, you ask? %s2", pick: 2},
-	{text: "What's my anti-drug? %s", pick: 1},
-	{text: "%s + %s2 = %s3", pick: 3, draw: 2},
-	{text: "What never fails to liven up the party? %s", pick: 1},
-	{text: "What's the new fad diet? %s", pick: 1},
-	{text: "Major League Baseball has banned %s for giving players an unfair advantage.", pick: 1},
-	
-],
-
-
 Expansions = {
-	//http://kyletfujita.com/2013/03/27/cards-against-humanity-third-expansion-full-spoiler/2/
+	original: {
+		white: [
+			'50,000 volts straight to the nipples.',
+			'72 virgins.',
+			'8 oz. of sweet Mexican black-tar heroin.',
+			'A bag of magic beans.',
+			'A balanced breakfast.',
+			'A bitch slap.',
+			'A bleached asshole.',
+			// 'A Bop It™.',
+			'A brain tumor.',
+			'A bucket of fish heads.',
+			'A can of whoop-ass.',
+			'A cooler full of organs.',
+			'A death ray.',
+			'A defective condom.',
+			'A disappointing birthday party.',
+			'A falcon with a cap on its head.',
+			'A fetus.',
+			'A foul mouth.',
+			'A gassy antelope.',
+			'A gentle caress of the inner thigh.',
+			'A good sniff.',
+			'A homoerotic volleyball montage.',
+			'A hot mess.',
+			'A lifetime of sadness.',
+			'A live studio audience.',
+			'A mating display.',
+			'A micropenis.',
+			'A micropig wearing a tiny raincoat and booties.',
+			'A middle-aged man on roller skates.',
+			'A mime having a stroke.',
+			'A monkey smoking a cigar.',
+			'A mopey zoo lion.',
+			'A murder most foul.',
+			'A pyramid of severed heads.',
+			'A really cool hat.',
+			'A robust mongoloid.',
+			'A sad handjob.',
+			'A salty surprise.',
+			'A sassy black woman.',
+			'A sausage festival.',
+			'A sea of troubles.',
+			'A snapping turtle biting the tip of your penis.',
+			'A spastic nerd.',
+			'A stray pube.',
+			'A subscription to Men\'s Fitness.',
+			'A Super Soaker™ full of cat pee.',
+			'A thermonuclear detonation.',
+			'A time travel paradox.',
+			'A tiny horse.',
+			'A tribe of warrior women.',
+			'A windmill full of corpses.',
+			'A zesty breakfast burrito.',
+			// 'Aaron Burr.',
+			'Active listening.',
+			'Actually taking candy from a baby.',
+			// 'Adderall™.',
+			'Advice from a wise, old black man.',
+			'African children.',
+			'Agriculture.',
+			'AIDS.',
+			'Alcoholism.',
+			'All-you-can-eat shrimp for $4.99.',
+			'Altar boys.',
+			'Amputees.',
+			'An asymmetric boob job.',
+			'An erection that lasts longer than four hours.',
+			'An icepick lobotomy.',
+			'An M. Night Shyamalan plot twist.',
+			'An M16 assault rifle.',
+			// 'An Oedipus complex.',
+			'An oversized lollipop.',
+			'An ugly face.',
+			'An uppercut.',
+			'Anal beads.',
+			'Another goddamn vampire movie.',
+			'Arnold Schwarzenegger.',
+			'Asians who aren\'t good at math.',
+			'Assless chaps.',
+			'Attitude.',
+			'Auschwitz.',
+			'Authentic Mexican cuisine.',
+			'Autocannibalism.',
+			'AXE Body Spray.',
+			'Balls.',
+			'Barack Obama.',
+			'BATMAN!!!',
+			'Battlefield amputations.',
+			'Bees?',
+			'Being a dick to children.',
+			'Being a motherfucking sorcerer.',
+			'Being fabulous.',
+			'Being fat and stupid.',
+			'Being marginalized.',
+			'Being on fire.',
+			'Being rich.',
+			'Bill Nye the Science Guy.',
+			'Bingeing and purging.',
+			'Bitches.',
+			'Black people.',
+			'Bling.',
+			'Boogers.',
+			'Breaking out into song and dance.',
+			'Britney Spears at 55.',
+			'Brown people.',
+			// 'Capturing Newt Gingrich and forcing him to dance in a monkey suit.',
+			'Cards Against Humanity.',
+			'Catapults.',
+			'Centaurs.',
+			'Chainsaws for hands.',
+			'Cheating in the Special Olympics.',
+			'Child beauty pageants.',
+			'Children on leashes.',
+			'Christopher Walken.',
+			'Chunks of dead prostitute.',
+			'Civilian casualties.',
+			'Classist undertones.',
+			'Coat hanger abortions.',
+			'Concealing a boner.',
+			'Consensual sex.',
+			'Copping a feel.',
+			'Count Chocula.',
+			'Crippling debt.',
+			'Crucifixion.',
+			'Crystal meth.',
+			'Cuddling.',
+			'Cybernetic enhancements.',
+			'Daddy issues.',
+			'Darth Vader.',
+			'Dead babies.',
+			'Dead parents.',
+			'Dental dams.',
+			'Destroying the evidence.',
+			'Dick Cheney.',
+			'Dick fingers.',
+			'Doin\' it in the butt.',
+			'Doing the right thing.',
+			// 'Domino\'s™ Oreo™ Dessert Pizza.',
+			'Drinking alone.',
+			'Dropping a chandelier on your enemies and riding the rope up.',
+			'Dry heaving.',
+			'Dying of dysentery.',
+			'Dying.',
+			'Eating all of the cookies before the AIDS bake-sale.',
+			'Eating the last known bison.',
+			'Edible underpants.',
+			'Elderly Japanese men.',
+			'Embryonic stem cells.',
+			'Emotions.',
+			'Erectile dysfunction.',
+			'Estrogen.',
+			'Ethnic cleansing.',
+			'Eugenics.',
+			'Exactly what you\'d expect.',
+			'Expecting a burp and vomiting on the floor.',
+			'Explosions.',
+			'Extremely tight pants.',
+			'Famine.',
+			// 'Fancy Feast®.',
+			'Farting and walking away.',
+			'Fear itself.',
+			// 'Feeding Rosie O\'Donnell.',
+			'Fiery poops.',
+			'Figgy pudding.',
+			'Finger painting.',
+			'Fingering.',
+			'Firing a rifle into the air while balls deep in a squealing hog.',
+			// 'Five-Dollar Footlongs™.',
+			'Flesh-eating bacteria.',
+			'Flightless birds.',
+			'Flying sex snakes.',
+			'Foreskin.',
+			'Former President George W. Bush.',
+			'Free samples.',
+			'Friction.',
+			'Friendly fire.',
+			'Friends with benefits.',
+			'Frolicking.',
+			'Full frontal nudity.',
+			'Funky fresh rhymes.',
+			'Gandhi.',
+			'Geese.',
+			'Genghis Khan.',
+			'Genital piercings.',
+			'German dungeon porn.',
+			'Getting drunk on mouthwash.',
+			'Getting married, having a few kids, buying some stuff, retiring to Florida, and dying.',
+			'Getting naked and watching Nickelodeon.',
+			'Getting really high.',
+			'Getting so angry that you pop a boner.',
+			'Ghosts.',
+			'Giving 110%.',
+			'Gloryholes.',
+			'Goblins.',
+			'God.',
+			// 'GoGurt®.',
+			'Golden showers.',
+			'Grandma.',
+			'Grave robbing.',
+			'Growing a pair.',
+			'Guys who don\'t call.',
+			'Half-assed foreplay.',
+			'Harry Potter erotica.',
+			'Heartwarming orphans.',
+			'Helplessly giggling at the mention of Hutus and Tutsis.',
+			'Her Majesty, Queen Elizabeth II.',
+			'Heteronormativity.',
+			'Historically black colleges.',
+			'Home video of Oprah sobbing into a Lean Cuisine®.',
+			'Homeless people.',
+			'Hope.',
+			'Hormone injections.',
+			'Horrifying laser hair removal accidents.',
+			'Horse meat.',
+			'Hospice care.',
+			'Hot cheese.',
+			'Hot people.',
+			'Hot Pockets®.',
+			'Hulk Hogan.',
+			'Hurricane Katrina.',
+			'Inappropriate yodeling.',
+			'Incest.',
+			'Italians.',
+			'Jerking off into a pool of children\'s tears.',
+			'Jewish fraternities.',
+			'John Wilkes Booth.',
+			'Judge Judy.',
+			'Justin Bieber.',
+			'Kamikaze pilots.',
+			'Kanye West.',
+			'Keanu Reeves.',
+			'Kids with ass cancer.',
+			'Lactation.',
+			'Lady Gaga.',
+			// 'Lance Armstrong\'s missing testicle.',
+			'Land mines.',
+			'Laying an egg.',
+			'Leaving an awkward voicemail.',
+			'Leprosy.',
+			'Licking things to claim them as your own.',
+			'Lockjaw.',
+			'Lumberjack fantasies.',
+			// 'Lunchables™.',
+			'Making a pouty face.',
+			'Man meat.',
+			'Masturbation.',
+			'Me time.',
+			'MechaHitler.',
+			'Men.',
+			'Menstrual rage.',
+			'Michael Jackson.',
+			'Michelle Obama\'s arms.',
+			'Morgan Freeman\'s voice.',
+			'Mouth herpes.',
+			// 'Mr. Clean, right behind you.',
+			'Muhammed (Praise Be Unto Him).',
+			'Multiple stab wounds.',
+			'Mutually-assured destruction.',
+			'My collection of high-tech sex toys.',
+			'My genitals.',
+			'My humps.',
+			'My inner demons.',
+			'My relationship status.',
+			'My sex life.',
+			'My soul.',
+			'My vagina.',
+			'Natalie Portman.',
+			'Natural male enhancement.',
+			'Natural selection.',
+			'Nazis.',
+			'Necrophilia.',
+			'New Age music.',
+			'Nickelback.',
+			'Nicolas Cage.',
+			'Nipple blades.',
+			'Not giving a shit about the Third World.',
+			'Not reciprocating oral sex.',
+			'Not wearing pants.',
+			'Obesity.',
+			'Object permanence.',
+			'Old-people smell.',
+			'One trillion dollars.',
+			'Oompa-Loompas.',
+			'Opposable thumbs.',
+			'Overcompensation.',
+			// 'Pabst Blue Ribbon.',
+			'Pac-Man uncontrollably guzzling cum.',
+			'Panda sex.',
+			'Parting the Red Sea.',
+			'Passable transvestites.',
+			'Passing a kidney stone.',
+			'Passive-aggressive Post-it notes.',
+			'Passive-agression.',
+			'Pedophiles.',
+			'Peeing a little bit.',
+			'Penis envy.',
+			'Picking up girls at the abortion clinic.',
+			'Pictures of boobs.',
+			'Pixelated bukkake.',
+			'Police brutality.',
+			'Pooping back and forth. Forever.',
+			'Poopy diapers.',
+			'Poor life choices.',
+			'Poor people.',
+			'Poorly-timed Holocaust jokes.',
+			'Porn stars.',
+			'Powerful thighs.',
+			'Prancing.',
+			'Praying the gay away.',
+			'Preteens.',
+			'Pretending to care.',
+			'Puberty.',
+			'Public ridicule.',
+			'Pulling out.',
+			'Puppies!',
+			'Queefing.',
+			// 'Racially-biased SAT questions.',
+			'Racism.',
+			'Raptor attacks.',
+			'Rehab.',
+			'Repression.',
+			'Republicans.',
+			'Riding off into the sunset.',
+			'Road head.',
+			'Robert Downey, Jr.',
+			'RoboCop.',
+			'Ronald Reagan.',
+			'Roofies.',
+			// 'Rush Limbaugh\'s soft, shitty body.',
+			'Same-sex ice dancing.',
+			'Sarah Palin.',
+			'Saxophone solos.',
+			'Scalping.',
+			'Science.',
+			'Scientology.',
+			'Scrubbing under the folds.',
+			'Sean Connery.',
+			'Sean Penn.',
+			'Self-loathing.',
+			// 'Seppuku.',
+			// 'Serfdom.',
+			'Sexting.',
+			'Sexual tension.',
+			'Sexy pillow fights.',
+			'Shapeshifters.',
+			'Shaquille O\'Neal\'s acting career.',
+			'Sharing needles.',
+			'Shiny objects.',
+			'Silence.',
+			'Skeletor.',
+			'Smallpox blankets.',
+			'Smegma.',
+			'Sniffing glue.',
+			'Some god-damn peace and quiet.',
+			'Soup that is too hot.',
+			'Spectacular abs.',
+			'Sperm whales.',
+			'Spontaneous human combustion.',
+			'Stalin.',
+			'Stephen Hawking talking dirty.',
+			'Stormtroopers.',
+			'Stranger danger.',
+			'Sunshine and rainbows.',
+			'Surprise sex!',
+			'Sweet, sweet vengeance.',
+			// 'Switching to Geico®.',
+			'Swooping.',
+			'Synergistic management solutions.',
+			'Take-backsies.',
+			'Taking off your shirt.',
+			'Tangled Slinkys.',
+			'Tasteful sideboob.',
+			'Teaching a robot to love.',
+			'Teenage pregnancy.',
+			'Tentacle porn.',
+			'Testicular torsion.',
+			'That thing that electrocutes your abs.',
+			'The American Dream.',
+			'The Amish.',
+			'The art of seduction.',
+			'The Big Bang.',
+			'The Blood of Christ.',
+			'The Boy Scouts of America.',
+			'The Care Bear Stare.',
+			'The Chinese gymnastics team.',
+			'The chronic.',
+			'The clitoris.',
+			'The Dance of the Sugar Plum Fairy.',
+			'The Devil himself.',
+			'The entire Mormon Tabernacle Choir.',
+			'The female orgasm.',
+			'The folly of man.',
+			'The Force.',
+			'The gays.',
+			'The glass ceiling.',
+			'The Great Depression.',
+			'The Hamburglar.',
+			'The hardworking Mexican.',
+			'The heart of a child.',
+			'The Holy Bible.',
+			'The homosexual agenda.',
+			'The Hustle.',
+			'The inevitable heat death of the universe.',
+			'The invisible hand.',
+			'The Jews.',
+			'The KKK.',
+			'The Kool-Aid Man.',
+			'The light of a billion suns.',
+			'The Little Engine That Could.',
+			'The Make-A-Wish® Foundation.',
+			'The milk man.',
+			'The miracle of childbirth.',
+			// 'The penny whistle solo from "My Heart Will Go On."',
+			'The placenta.',
+			'The Pope.',
+			'The profoundly handicapped.',
+			'The Rapture.',
+			'The Rev. Dr. Martin Luther King, Jr.',
+			'The South.',
+			'The taint; the grundle; the fleshy fun-bridge.',
+			// 'The Tempur-Pedic® Swedish Sleep System™.',
+			'The terrorists.',
+			'The Three-Fifths compromise.',
+			'The token minority.',
+			'The Trail of Tears.',
+			'The true meaning of Christmas.',
+			'The Underground Railroad.',
+			'The violation of our most basic human rights.',
+			'The Virginia Tech Massacre.',
+			'The World of Warcraft.',
+			'The Übermensch.',
+			'Third base.',
+			'Throwing a virgin into a volcano.',
+			// 'Tickling Sean Hannity, even after he tells you to stop.',
+			'Tom Cruise.',
+			// 'Toni Morrison\'s vagina.',
+			'Two midgets shitting into a bucket.',
+			'Unfathomable stupidity.',
+			'Used panties.',
+			'Vehicular manslaughter.',
+			'Viagra®.',
+			'Vigilante justice.',
+			'Vigorous jazz hands.',
+			'Vikings.',
+			'Waiting \'til marriage.',
+			'Waking up half-naked in a Denny\'s parking lot.',
+			'Wearing underwear inside-out to avoid doing laundry.',
+			'Wet dreams.',
+			'When you fart and a little bit comes out.',
+			'Whipping it out.',
+			'White people.',
+			'White privilege.',
+			'Wifely duties.',
+			'William Shatner.',
+			'Winking at old people.',
+			'Wiping her butt.',
+			'Women in yogurt commercials.',
+			'Women\'s suffrage.',
+			'World peace.',
+			'Yeast.',
+			'YOU MUST CONSTRUCT ADDITIONAL PYLONS.'
+		],
+
+		black: [
+			{text: "How did I lose my virginity? %s", pick: 1},
+			{text: "Why can't I sleep at night? %s", pick: 1},
+			{text: "What's that smell? %s", pick: 1},
+			{text: "I got 99 problems but %s ain't one.", pick: 1},
+			{text: "Maybe she's born with it. Maybe it's %s.", pick: 1},
+			{text: "What's the next Happy Meal toy? %s", pick: 1},
+			{text: "Here is the church,\\Here is the steeple,\\Open the doors and there is %s.", pick: 1},
+			{text: "It's a pity that kids these days are all involved with %s.", pick: 1},
+			{text: "During his childhood, Salvador Dali produced hundreds of paintings of %s.", pick: 1},
+			{text: "Alternative medicine is now embracing the curative powers of %s.", pick: 1},
+			{text: "And the Academy Award for %s goes to %s2.", pick: 2},
+			{text: "What's that sound? %s", pick: 1},
+			{text: "What ended my last relationship? %s", pick: 1},
+			{text: "MTV's new reality show features eight washed-up celebrities living with %s.", pick: 1},
+			{text: "I drink to forget %s.", pick: 1},
+			{text: "I'm sorry professor, but I couldn't complete my homework because of %s.", pick: 1},
+			{text: "What is Batman's guilty pleasure? %s", pick: 1},
+			{text: "This is the way the world ends\\This is the way the world ends\\Not with a bang but with %s.", pick: 1},
+			{text: "What's a girls best friend? %s", pick: 1},
+			{text: "TSA guidelines now prohibit %s on airplanes.", pick: 1},
+
+			{text: "%s. That's how I want to die.", pick: 1},
+			{text: "For my next trick, I will pull %s out of %s2.", pick: 2},
+			{text: "In the new Disney Channel Original Movie, Hannah Montana struggles with %s for the first time.", pick: 1},
+			{text: "%s is a slippery slope that leads to %s2.", pick: 2},
+			{text: "What does Dick Cheney prefer?  %s", pick: 1},
+			{text: "Dear Abby, I'm having some trouble with %s and would like your advice.", pick: 1},
+			{text: "Instead of coal, santa now gives the bad children %s.", pick: 1},
+			{text: "What's the most emo? %s", pick: 1},
+			{text: "In 1,000 years, when paper money is a distant memory, how will we pay for goods and services? %s", pick: 1},
+			{text: "What's the next superhero/sidekick duo? %s and %s2", pick: 2},
+			{text: "In M. Night Shyamalan's new movie, Bruce Willis discoveries that %s had really been %s2 all along.", pick: 2},
+			{text: "A romantic, candlelit dinner would be incomplete without %s.", pick: 1},
+			{text: "%s. Betcha can't just have one!", pick: 1},
+			{text: "White people like %s.", pick: 1},
+			{text: "%s. High five, bro.", pick: 1},
+			{text: "Next from J.K. Rowling: Harry Potter and the Chamber of %s.", pick: 1},
+			{text: "BILLY MAYS HERE FOR %s.", pick: 1},
+			{text: "In a world ravaged by %s our only solace is %s2.", pick: 2},
+			{text: "War! What is it good for? %s", pick: 1},
+			{text: "During sex, I like to think about %s.", pick: 1},
+
+			{text: "What are my parents hiding from me? %s", pick: 1},
+			{text: "What will always get you laid? %s", pick: 1},
+			{text: "in L.A. County Jail, word is you can trade 200 cigarettes for %s.", pick: 1},
+			{text: "What did I bring back from Mexico? %s", pick: 1},
+			{text: "What don't you want to find in your Kung Pao chicken? %s", pick: 1},
+			{text: "What will I bring back in time to convince people that I am a powerful wizard? %s", pick: 1},
+			{text: "How am I maintaining my relationship status? %s", pick: 1},
+			{text: "%s. It's a trap!", pick: 1},
+			{text: "Coming to Broadway this season, %s: The Musical.", pick: 1},
+			{text: "While the United States raced the Soviet Union to the moon, the Mexican government funneled millions of pesos into research on %s.", pick: 1},
+			{text: "After the earthquake, Sean Penn brought %s to the people of Haiti.", pick: 1},
+			{text: "Next on ESPN2, the World Series of %s.", pick: 1},
+			{text: "Step 1: %s.\\Step 2: %s2.\\Step 3: Profit", pick: 2},
+			{text: "Rumor has it that Vladimir Putin's favorite delicacy is %s stuffed with %s2.", pick: 2},
+			{text: "Before I kill you, Mr Bond, I must show you %s.", pick: 1},
+			{text: "What gives me uncontrollable gas? %s", pick: 1},
+			{text: "What do old people smell like? %s", pick: 1},
+			{text: "The class field trip was completely ruined by %s.", pick: 1},
+			{text: "When Pharoh remained unmoved, Moses called down a plague of %s.", pick: 1},
+			{text: "What's my secret power? %s", pick: 1},
+			
+			{text: "What's there a ton of in heaven? %s", pick: 1},
+			{text: "What would grandma find disturbing, yet oddly charming? %s", pick: 1},
+			{text: "I never truly understood %s until I encountered %s2.", pick: 2},
+			{text: "What did the U.S. airdrop to the children of Afghanistan? %s", pick: 1},
+			{text: "What helps Obama unwind? %s", pick: 1},
+			{text: "What did Vin Diesel eat for diner? %s", pick: 1},
+			{text: "%s: good to the last drop.", pick: 1},
+			{text: "Why am I sticky? %s", pick: 1},
+			{text: "What gets better with age? %s", pick: 1},
+			{text: "%s: kid-tested, mother-approved.", pick: 1},
+			{text: "Daddy, why is mommy crying? %s", pick: 1},
+			// {text: "What's Teach for America using to inspire inner city students to succeed? %s", pick: 1},
+			{text: "Studies show that lab rats navigate mazes 50% faster after being exposed to %s.", pick: 1},
+			{text: "Life for American Indians was forever changed when the White Man introduced them to %s.", pick: 1},
+			{text: "I do not know what weapons World War III will be fought with, but World War IV will be fought with %s.", pick: 1},
+			{text: "Why do I hurt all over? %s", pick: 1},
+			{text: "What am I giving up for Lent? %s", pick: 1},
+			{text: "In Michael Jackson's final moments, he thought about %s.", pick: 1},
+			{text: "The Smithsonian Museum of Natural History has just opened an interactive exhibit on %s.", pick: 1},
+			{text: "When I am the President of the United States, I will create the Department of %s.", pick: 1},
+			{text: "Lifetime presents %s, the story of %s2.", pick: 2},
+			{text: "When I am a billionaire, I shall erect a 50-foot statue to commemorate %s.", pick: 1},
+			{text: "When I was tripping on acid, %s turned into %s2.", pick: 2},
+			{text: "that's right, I killed %s. How, you ask? %s2", pick: 2},
+			{text: "What's my anti-drug? %s", pick: 1},
+			{text: "%s + %s2 = %s3", pick: 3, draw: 2},
+			{text: "What never fails to liven up the party? %s", pick: 1},
+			{text: "What's the new fad diet? %s", pick: 1},
+			{text: "Major League Baseball has banned %s for giving players an unfair advantage.", pick: 1},
+			
+		]
+	},
+
 	first: {
 		white: [
 			'a beached whale.',
@@ -1222,11 +1210,24 @@ Symbols = [
 				Games[room] = new Game();
 				// name it
 				Games[room].name = room;
+
+				// create the list of cards available from all the expansions
+				for(expansion in Games[room].expansions){
+					var exp = Expansions[expansion];
+
+					if(Games[room].expansions[expansion]){
+						Games[room].cards = Games[room].cards.concat(exp.white);
+						Games[room].blacks = Games[room].blacks.concat(exp.black);
+					}
+					
+				}
 			}
 
 			debug && console.log('join_game 4');
 
 			mygame = Games[room];
+
+			console.log(mygame.blacks);
 
 			// join the room for this game
 			socket.join(room);
@@ -1325,6 +1326,7 @@ Symbols = [
 			// if the player leaving is the czar
 			if(myplayer.czar){
 				// then end the round
+				Games[data.name].current_whites = [];
 				io.sockets.in(room).emit('czar_left');
 			}
 
@@ -1345,6 +1347,7 @@ Symbols = [
 
 			// look through all the players in this game
 			for(var i=0;i<thisgame.players.length;i++){
+
 				// if any of the players have the same socket id as the one that just disconnected
 				if(thisgame.players[i].socket_id == socket.id){
 
@@ -1354,13 +1357,40 @@ Symbols = [
 					// remove him from the player list.
 					thisgame.players.splice(i, 1);
 
+					// go through all the cards that have been played
 					for(var j=0;j<thisgame.current_whites.length;j++){
+						// and if we find his
 						if(thisgame.current_whites[j].player.socket_id == socket.id){
+							// remove it.
 							thisgame.current_whites.splice(j, 1);
 						}
 					}
 
-					thisgame.reveal = thisgame.current_whites.length == thisgame.players.length -1;
+
+					var n = 0;
+
+					// loop through all players again
+					for(var j=0;j<thisgame.players.length;j++){
+						// and check if this player has a card in the current_whites
+						for(var k=0;k<thisgame.current_whites.length;k++){
+							// if they do
+							if(thisgame.current_whites[k].player.socket_id == thisgame.players[j].socket_id){
+								// increase n by one
+								n++;
+							}
+						}
+					}
+
+					var a = 0;
+
+					for(var j=0;j<thisgame.players.length;j++){
+						if(thisgame.players[j].active){
+							a++;
+						}
+					}
+
+					// if n == players.length then every player has played a card, so reveal.
+					thisgame.reveal = n == a - 1;
 					//console.log('thisgame.current_whites.length: '+thisgame.current_whites.length);
 					//console.log('thisgame.players.length: '+(thisgame.players.length-1));
 
@@ -1448,7 +1478,7 @@ Symbols = [
 				debug && console.log('request_card 2');
 
 				do{
-					card = WhiteCards[parseInt(Math.random() * WhiteCards.length)];
+					card = mygame.cards[parseInt(Math.random() * mygame.cards.length)];
 				}while(mygame.cardsInUse.indexOf(card) != -1);
 
 
@@ -1499,7 +1529,7 @@ Symbols = [
 			var card;
 
 			do{
-				card = BlackCards[parseInt(Math.random() * BlackCards.length)];
+				card = mygame.blacks[parseInt(Math.random() * mygame.blacks.length)];
 			}while(mygame.blacksInUse.indexOf(card) != -1);
 
 			debug && console.log('request_black 2');
@@ -1509,6 +1539,10 @@ Symbols = [
 			mygame.current_black.push(card);
 
 			debug && console.log('request_black 3');
+
+			for(var i=0;i<mygame.players.length;i++){
+				mygame.players[i].active = true;
+			}
 
 			io.sockets.in(room).emit('deal_black', {card: card});
 			
@@ -1577,7 +1611,32 @@ Symbols = [
 
 			debug && console.log('play_card 2');
 
-			mygame.reveal = mygame.current_whites.length == mygame.players.length -1;
+			var n = 0;
+
+			// loop through all players again
+			for(var j=0;j<mygame.players.length;j++){
+				// and check if this player has a card in the current_whites
+				for(var k=0;k<mygame.current_whites.length;k++){
+					// if they do
+					if(mygame.current_whites[k].player.socket_id == mygame.players[j].socket_id){
+						// increase n by one
+						n++;
+					}
+				}
+			}
+
+			var a = 0;
+
+			for(var j=0;j<mygame.players.length;j++){
+				if(mygame.players[j].active){
+					a++;
+				}
+			}
+
+			// if n == players.length then every player has played a card, so reveal.
+			mygame.reveal = n == a - 1;
+
+			//mygame.reveal = mygame.current_whites.length == mygame.players.length -1;
 			data.reveal = mygame.reveal;
 
 			debug && console.log('play_card 3');
@@ -1785,19 +1844,37 @@ Symbols = [
 				}
 			}
 
+			debug && console.log('disconnect 2');
+
 			for(game in Games){
 				var thisgame = Games[game];
 
 				// look through all the players in this game
 				for(var i=0;i<thisgame.players.length;i++){
+					var n = 0;
+
+					for(var j=0;j<thisgame.current_whites.length;j++){
+						// if they do
+						if(thisgame.current_whites[j].player.socket_id == thisgame.players[i].socket_id){
+							// increase n by one
+							n++;
+						}
+					}
+
 					// if any of the players have the same socket id as the one that just disconnected
 					if(thisgame.players[i].socket_id == socket.id){
 						// remove him from the player list.
 						thisgame.players.splice(i, 1);
 
-						thisgame.reveal = thisgame.current_whites.length == thisgame.players.length -1;
-						//console.log('thisgame.current_whites.length: '+thisgame.current_whites.length);
-						//console.log('thisgame.players.length: '+(thisgame.players.length -1));
+						var a = 0;
+						for(var j=0;j<thisgame.players.length;j++){
+							if(thisgame.players[j].active){
+								a++;
+							}
+						}
+
+						// if n == players.length then every player has played a card, so reveal.
+						thisgame.reveal = n == a;
 
 						io.sockets.emit('player_left', {socket_id: socket.id, game: thisgame});
 					}
@@ -1805,7 +1882,7 @@ Symbols = [
 
 				mygame = false;
 
-				debug && console.log('disconnect 2');
+				debug && console.log('disconnect 3');
 
 				// check if the players list is empty
 				if(thisgame.players.length == 0){

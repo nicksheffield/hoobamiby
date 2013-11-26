@@ -19,19 +19,27 @@
 
 html{
 	height: 100%;
+	overflow: hidden;
 }
 
 body{
 	font-family: @font;
-	background: #fff url(../img/gplaypattern.png);
+	background: #fff url(../img/whitediamond.png);
 	height: 100%;
+	margin: 0;
+}
+
+button{
+	font-size: 100%;
+	margin: 0;
+	vertical-align: baseline;
+	cursor: pointer;
 }
 
 header{
 	position: absolute;
 	top: 0;
-	left: 0;
-	width: 100%;
+	right: 0;
 	padding: 1em;
 	z-index: 9;
 
@@ -111,12 +119,29 @@ header{
 	padding: 50px;
 }
 
+.victory{
+	text-align: center;
+
+	h1{
+		font-size: 3em;
+	}
+
+	p{
+		font-size: 2em;
+	}
+}
+
 .container{
 	height: 60%;
 	overflow: auto;
 
 	&.full{
 		height: 100%;
+		background: none;
+	}
+
+	&.dark{
+		background: url(../img/darkdenim3.png);
 	}
 }
 
@@ -156,6 +181,9 @@ header{
 		padding: 0.5em 1em;
 		outline: 0;
 		background: #fff;
+		font-size: 1.2em;
+
+		.transition();
 
 		&:hover{
 			background: #000;
@@ -178,7 +206,13 @@ header{
 	}
 }
 
-.game{}
+.game{
+
+	.white, .symbol{
+		box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+		margin: 32px 0 32px 32px;
+	}
+}
 
 .browse{
 
@@ -189,7 +223,6 @@ header{
 
 		li{
 			padding: 1em;
-			margin: 1em 0;
 			position: relative;
 			line-height: 150%;
 			width: 300px;
@@ -197,14 +230,12 @@ header{
 			border: 1px solid #000;
 			min-height: 300px;
 			display: inline-block;
-			margin: 0 1em;
+			margin: 0 1em 2em;
 			cursor: pointer;
 
 			.transition();
 
 			&:hover{
-				background: #000;
-				color: #fff;
 				box-shadow: 0 0 10px #000;
 
 				.join_button{
@@ -248,7 +279,7 @@ header{
 .player{
 	width: 100%;
 	border-top: 1px solid #000;
-	background: #fff url(../img/gplaypattern.png);
+	background: #fff url(../img/whitediamond.png);
 	height: 40%;
 
 	h2{
@@ -327,6 +358,7 @@ header{
 			text-align: center;
 			font-size: 3em;
 			z-index: 9;
+			padding-top: 1em;
 		}
 }
 
@@ -336,7 +368,7 @@ header{
 		padding-bottom: 2em;
 		position: relative;
 
-		.pure-control-group{
+		.row{
 			margin-bottom: 1em;
 		}
 
@@ -387,6 +419,7 @@ header{
 		font-family: Roboto;
 		font-weight: 300;
 		margin: 0;
+		padding-right: 100px;
 
 		-webkit-font-smoothing: antialiased;
 	}
@@ -463,12 +496,6 @@ header{
 
 	&[answer]{
 		cursor: pointer;
-	}
-}
-
-.pure-button{
-	.fa{
-		padding-right: 1em;
 	}
 }
 

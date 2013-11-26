@@ -70,7 +70,8 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		hand: [],
 		host: false,
 		socket_id: '',
-		winner: false
+		winner: false,
+		active: false
 	}
 
 	$scope.$watch('player.name', function(new_val, old_val){
@@ -103,7 +104,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 
 	$scope.playCard = function(elCard){
 		$scope.$apply(function(){
-			if(!$scope.player.played_card && !$scope.player.czar && !$scope.game.reveal && !$scope.game.end){
+			if(!$scope.player.played_card && !$scope.player.czar && !$scope.game.reveal && !$scope.game.end && $scope.player.active){
 				//$scope.game.current_whites.push({text: elCard.text(), player: $scope.player});
 				elCard.addClass('chosen');
 
@@ -138,6 +139,9 @@ app.controller('cardsCtrl', function ($scope, socket) {
 	$scope.leaveGame = function(){
 
 		socket.emit('leave_game', {name: $scope.game.name});
+		$scope.player.active = false;
+
+		clearTimeout($scope.timer);
 
 	}
 
@@ -176,7 +180,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		console.log('connected');
 
 		if($scope.connected){
-			console.log('refreshing...');
+			console.log('refreshing stale client');
 			location.reload();
 		}else{
 			$scope.connected = true;
@@ -346,6 +350,8 @@ app.controller('cardsCtrl', function ($scope, socket) {
 	socket.on('deal_black', function(data){
 		$scope.game.current_black = [];
 
+		$scope.player.active = true;
+
 		if(data.card.pick != 1){
 			socket.emit('request_black');
 			return;
@@ -374,11 +380,20 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		$scope.game.current_answer = card.text;
 		$scope.game.chosen = true;
 		
-		// give the player that won a point
+		// loop through all the players
 		for(var i=0;i<$scope.game.players.length;i++){
+
+			// find the one that won
 			if($scope.game.players[i].socket_id == data.card.player.socket_id){
+				// and give that player a point
 				$scope.game.players[i].score += 1;
 				$scope.game.players[i].winner = true;
+			}
+
+			// also for each player, 
+			for(var j=0;j<$scope.game.players[i].hand.length;j++){
+				// make sure all their white cards aren't highlighted
+				$scope.game.players[i].hand[j].chosen = false;
 			}
 		}
 
@@ -396,7 +411,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 			if($scope.player.czar){
 
 				// then set a timer that will go off after 5 seconds
-				setTimeout(function(){
+				$scope.timer = setTimeout(function(){
 					// and cause everyone's screen to wipe, ready for the next round
 					socket.emit('wipe');
 					socket.emit('request_black');
@@ -419,6 +434,9 @@ app.controller('cardsCtrl', function ($scope, socket) {
 
 	// when the round ends (or a czar leaves)
 	socket.on('wiped', function(data){
+
+		console.log('wiped');
+
 
 		// make sure the player is not the czar
 		$scope.player.czar = false;
@@ -447,6 +465,9 @@ app.controller('cardsCtrl', function ($scope, socket) {
 			}
 		}
 
+		// make sure all your cards are white
+		$('.hand .card').removeClass('chosen');
+
 		$scope.game.current_whites = [];
 		$scope.game.chosen = false;
 		$scope.player.played_card = false;
@@ -458,11 +479,8 @@ app.controller('cardsCtrl', function ($scope, socket) {
 	socket.on('winner', function(data){
 		$scope.stage.end = true;
 
-		console.log(data);
-
 		// after 5 seconds
 		setTimeout(function(){
-			console.log(data);
 			// show the victory screen with the new winner
 			$scope.game.winner = data.player;
 			$scope.stage = 'victory';
@@ -497,6 +515,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 
 	// when the client is told to refresh
 	socket.on('reset', function(){
+		console.log('reset');
 		location.reload();
 	})
 
