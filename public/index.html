@@ -11,13 +11,23 @@
 </head>
 <body ng-app="app" ng-controller="cardsCtrl">
 
-	<div class="container" ng-switch="stage" ng-cloak ng-class="{full: stage=='intro'||stage=='browse_games',dark: stage=='game'}">
+	<div class="container" ng-switch="stage" ng-cloak ng-class="{full: stage=='intro'||stage=='browse',dark: stage=='game'}">
+
+
+
+
+
+
+
+
+
+
 
 		<header ng-hide="stage=='intro'" ng-cloak ng-class="{dark:stage=='game'}">
 			<ul class="navbar">
 				<li ng-show="stage=='setup'&&player.host" ng-click="start()"><i class="fa fa-check"></i>Start Game</li>
-				<li ng-hide="stage=='intro'||stage=='browse_games'" ng-click="leaveGame()" ng-class="{slide:stage=='game'}"><i class="fa fa-power-off"></i><span>Leave Game</span></li>
-				<li ng-show="stage=='browse_games'" ng-click="createGame()"><i class="fa fa-plus"></i>Create Game</li>
+				<li ng-hide="stage=='intro'||stage=='browse'" ng-click="leaveGame()" ng-class="{slide:stage=='game'}"><i class="fa fa-times"></i><span>Leave Game</span></li>
+				<li ng-show="stage=='browse'" ng-click="createGame()"><i class="fa fa-plus"></i>Create Game</li>
 			</ul>
 		</header>
 
@@ -35,9 +45,10 @@
 			<h1>Hoobamiby</h1>
 			
 			<form action="">
-				<input type="text" id="player_name" ng-model="player.name" placeholder="What is your name?">
+				<input type="text" id="player_name" ng-model="player.name" placeholder="What is your name?" maxlength="20">
 				<br>
 				<button class="" ng-click="browse()">Enter</button>
+				<button class="" ng-click="random_name()">Give me a random name</button>
 			</form>
 		</div>
 
@@ -51,7 +62,7 @@
 
 
 
-		<div class="browse panel" ng-switch-when="browse_games">
+		<div class="browse panel" ng-switch-when="browse">
 			<h2>Current Games</h2>
 			
 			<ul class="rooms">
@@ -79,23 +90,23 @@
 
 		<div class="setup panel" ng-switch-when="setup">
 			<form action="">
-				<h2>{{game.name}}</h2>
+				<h1>{{game.name}}</h1>
 
-				<div class="row">
-					<label for="score_limit">Score Limit: <b>{{game.score_limit}}</b></label>
-					<br>
-					<input type="range" min="2" max="15" id="score_limit" ng-model="game.score_limit" ng-change="changeSetting('score_limit')" ng-disabled="!player.host">
-				</div>
-				
-				<div class="row">
-					<label for="player_limit">Max Players: <b>{{game.player_limit}}</b></label>
-					<br>
-					<input type="range" min="2" max="11" id="player_limit" ng-model="game.player_limit" ng-change="changeSetting('player_limit')" ng-disabled="!player.host">
+				<div class="settings">
+					<div class="row">
+						<label for="score_limit">Score Limit: <b>{{game.score_limit}}</b></label>
+						<br>
+						<input type="range" min="2" max="15" id="score_limit" ng-model="game.score_limit" ng-change="changeSetting('score_limit')" ng-disabled="!player.host">
+					</div>
+					
+					<div class="row">
+						<label for="player_limit">Max Players: <b>{{game.player_limit}}</b></label>
+						<br>
+						<input type="range" min="3" max="11" id="player_limit" ng-model="game.player_limit" ng-change="changeSetting('player_limit')" ng-disabled="!player.host">
+					</div>
 				</div>
 
 				<div class="expansions">
-					<h2>Expansions</h2>
-
 					<div class="row">
 						<label for="expansion_1">
 							<input type="checkbox" id="expansion_1" ng-model="game.expansions.first" ng-change="changeSettingObj('expansions', 'first')" ng-disabled="!player.host"> First Expansion
@@ -125,7 +136,6 @@
 							<input type="checkbox" id="expansion_n" ng-model="game.expansions.nigrahs" ng-change="changeSettingObj('expansions', 'nigrahs')" ng-disabled="!player.host"> Nigrahs Expansion
 						</label>
 					</div>
-					
 				</div>
 			</form>
 		</div>
@@ -162,6 +172,8 @@
 		<div class="victory panel" ng-switch-when="victory">
 			<h1>We have a winner!</h1>
 			<p>{{game.winner.name}} with {{game.winner.score}} <em>Awesome Points</em>!</p>
+
+			<div ng-repeat="winner in game.winners" winner data-text="{{winner.black.text}}" data-answer="{{winner.white.text}}"></div>
 		</div>
 
 
@@ -177,26 +189,43 @@
 
 
 
-	<div class="player" ng-hide="stage=='browse_games'||stage=='intro'" ng-cloak>
+	<div class="player" ng-hide="stage=='browse'||stage=='intro'" ng-cloak>
 
 		<div class="left">
 			<h2>Players</h2>
 			<ul class="players">
 				<li ng-repeat="player in game.players" ng-class="{czar: player.czar, winner: player.winner}" ng-cloak>
-					<i class="fa fa-{{player.symbol}}"></i> {{player.name}} <span class="score">{{player.score}}</span>
+					<i class="fa fa-{{player.symbol}}"></i> {{player.name}} <span ng-show="player.czar">(czar)</span> <span class="score">{{player.score}}</span>
 				</li>
 			</ul>
 		</div>
 		
 		<div class="right">
 			<h2>Your Hand</h2>
-			<div class="you-are-czar" ng-show="player.czar" ng-cloak>You are the Czar</div>
-			<div class="you-are-czar" ng-show="!player.active" ng-cloak>Wait until next round</div>
+			<div class="you-are-czar" ng-show="player.czar" ng-cloak><span ng-show="player.real_man">You are the real man</span><span ng-hide="player.real_man">You are the Czar</span></div>
+			<div class="you-are-czar" ng-show="!player.active&&game.started" ng-cloak>Wait until next round</div>
 			<div class="hand">
 				<div card="white" class="small" answer inhand ng-repeat="card in player.hand" ng-class="{choose: !player.played_card}" ng-cloak>{{card}}</div>
 			</div>
 		</div>
 		
+	</div>
+
+
+
+
+
+
+
+
+
+
+	<div class="modal-bg" ng-show="modal.showing" ng-cloak></div>
+
+	<div modal="not_enough_players" ng-show="modal.not_enough_players" ng-cloak>
+		The game was closed because there was not enough players
+
+		<button class="close"><i class="fa fa-check"></i>Ok</button>
 	</div>
 
 

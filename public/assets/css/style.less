@@ -193,23 +193,12 @@ header{
 	}
 }
 
-.setup{
 
-	h2{
-		font-size: 3em;
-		font-weight: 100;
-		font-family: Roboto;
-		margin: 0;
-		padding-bottom: 0.5em;
-		border-bottom: 1px solid #DDD;
-		margin-bottom: 0.5em;
-	}
-}
 
 .game{
 
 	.white, .symbol{
-		box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+		box-shadow: 0 0 10px rgba(0,0,0,0.7);
 		margin: 32px 0 32px 32px;
 	}
 }
@@ -226,10 +215,9 @@ header{
 			position: relative;
 			line-height: 150%;
 			width: 300px;
-			background: #fff;
 			border: 1px solid #000;
 			min-height: 300px;
-			display: inline-block;
+			float: left;
 			margin: 0 1em 2em;
 			cursor: pointer;
 
@@ -245,8 +233,10 @@ header{
 			}
 
 			.title{
-				font-weight: bold;
+				font-family: Roboto;
+				font-weight: 300;
 				font-size: 2em;
+				line-height: 120%;
 				margin: 0 0 1em 0;
 			}
 
@@ -328,8 +318,8 @@ header{
 
 			&.czar{
 				font-weight: bold;
-				background: @secondary;
-				color: #fff;
+				//background: @secondary;
+				//color: #fff;
 				-webkit-font-smoothing: antialiased;
 			}
 
@@ -363,6 +353,23 @@ header{
 }
 
 .setup{
+
+	h1{
+		font-size: 3em;
+		font-weight: 100;
+		font-family: Roboto;
+		margin: 0;
+		padding-bottom: 0.5em;
+		border-bottom: 1px solid #DDD;
+		margin-bottom: 0.5em;
+	}
+
+	.settings, .expansions{
+		display: inline-block;
+		vertical-align: top;
+		margin-top: 0;
+		width: 30%;
+	}
 
 	form{
 		padding-bottom: 2em;
@@ -420,6 +427,7 @@ header{
 		font-weight: 300;
 		margin: 0;
 		padding-right: 100px;
+		box-shadow: 0 0 10px rgba(0,0,0,0.7);
 
 		-webkit-font-smoothing: antialiased;
 	}
@@ -505,17 +513,42 @@ header{
 	left: 0;
 	width: 100%;
 	height: 100%;
-	background: rgba(0,0,0,0.8);
-	display: none;
+	background: rgba(0,0,0,0.9);
 }
 
 .modal{
 	width: 500px;
 	min-height: 100px;
 	position: absolute;
-	top: 100px;
+	top: 0;
 	left: 50%;
 	margin-left: -250px;
-	background: #fff;
-	display: none;
+	border: 1px solid #fff;
+	color: #fff;
+	border-top: none;
+	padding: 0.5em;
+
+	text-align: center;
+	line-height: 150%;
+	font-family: Roboto;
+	font-weight: 100;
+	font-size: 2em;
+
+	button{
+		font-size: 0.5em;
+		padding: 1em 2em;
+		border: none;
+		background: #fff;
+		color: #000;
+		margin: 1em;
+		outline: 0;
+
+		.fa{
+			padding-right: 1em;
+		}
+
+		&:hover{
+			box-shadow: 0 0 5px #fff;
+		}
+	}
 }

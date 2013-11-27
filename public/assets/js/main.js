@@ -1,7 +1,7 @@
 var app = angular.module('app', [])
 
 app.factory('socket', function ($rootScope) {
-	var socket = io.connect('http://192.241.191.126:8003');
+	var socket = io.connect('http://192.241.191.126:8004');
 	return {
 		on: function (eventName, callback) {
 			socket.on(eventName, function () {
@@ -27,11 +27,16 @@ app.factory('socket', function ($rootScope) {
 
 app.controller('cardsCtrl', function ($scope, socket) {
 
+
 	$scope.blank_answer = '________';
-	$scope.stage = 'intro'; // intro -> browse_games -> setup -> game
+	$scope.stage = 'intro'; // intro -> browse -> setup -> game
 	$scope.games = [];
 	$scope.connected = false;
 	$scope.joining = false;
+
+	// for debug
+	window.scope = $scope;
+
 
 	$scope.game = {
 		name: '',
@@ -51,6 +56,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		winner: {},
 	}
 
+
 	$scope.player = {
 		name: localStorage.playername ? localStorage.playername : '',
 		symbol: '',
@@ -61,14 +67,23 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		host: false,
 		socket_id: '',
 		winner: false,
-		active: false
+		active: false,
+		real_man: parseInt(Math.random()*20)==1
 	}
+
+
+	$scope.modal = {
+		not_enough_players: false,
+		showing: false
+	}
+
 
 	$scope.$watch('player.name', function(new_val, old_val){
 
 		localStorage.playername = new_val;
 
 	})
+
 
 	$scope.browse = function(){
 		if($scope.player.name.trim() == ''){
@@ -83,6 +98,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		socket.emit('game_started', {game: $scope.game});
 	}
 
+
 	$scope.displayAnswer = function(answer){
 		$scope.$apply(function(){
 			if(!$scope.game.chosen){
@@ -90,6 +106,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 			}
 		});
 	}
+
 
 	$scope.playCard = function(elCard){
 		$scope.$apply(function(){
@@ -124,6 +141,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 
 		socket.emit('join_game', {name: this.game.name, player: $scope.player});
 	}
+
 
 	$scope.leaveGame = function(){
 
@@ -161,6 +179,13 @@ app.controller('cardsCtrl', function ($scope, socket) {
 	}
 
 
+	$scope.random_name = function(){
+
+		socket.emit('request_name');
+
+	}
+
+
 	$scope.chooseWhite = function(card){
 		// look through all the current white cards
 		for(var i=0;i<$scope.game.current_whites.length;i++){
@@ -171,6 +196,18 @@ app.controller('cardsCtrl', function ($scope, socket) {
 				$scope.game.chosen = true;
 			}
 		}
+	}
+
+
+	$scope.hide_modal = function(modal){
+		$scope.modal[modal] = false;
+		$scope.modal.showing = false;
+	}
+
+
+	$scope.show_modal = function(modal){
+		$scope.modal[modal] = true;
+		$scope.modal.showing = true;
 	}
 
 
@@ -193,7 +230,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 
 	// when your name is approved
 	socket.on('browsing', function(){
-		$scope.stage = 'browse_games';
+		$scope.stage = 'browse';
 	})
 
 
@@ -233,7 +270,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		$scope.player.hand = [];
 		$scope.player.czar = false;
 
-		$scope.stage = 'browse_games';
+		$scope.stage = 'browse';
 	})
 
 
@@ -268,7 +305,8 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		}
 
 		if(data.name == $scope.game.name){
-			alert('The game was closed because there was not enough players');
+			//alert('The game was closed because there was not enough players');
+			//$scope.show_modal('not_enough_players');
 			$scope.game.name = '';
 			$scope.game.players = [];
 			$scope.game.current_answer = $scope.blank_answer;
@@ -276,7 +314,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 			$scope.player.hand = [];
 			$scope.player.czar = false;
 
-			$scope.stage = 'browse_games';
+			$scope.stage = 'browse';
 		}
 	})
 
@@ -368,7 +406,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 
 		$scope.player.active = true;
 
-		if(data.card.pick != 1){
+		if(data.card.pick != 1 && $scope.player.host){
 			socket.emit('request_black');
 			console.log('requesting a new black card');
 			return;
@@ -500,6 +538,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		setTimeout(function(){
 			// show the victory screen with the new winner
 			$scope.game.winner = data.player;
+			$scope.game.winners = data.winners;
 			$scope.stage = 'victory';
 		}, 5000);
 	})
@@ -518,6 +557,10 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		alert('This game is full.');
 	})
 
+	socket.on('name_given', function(data){
+		$scope.player.name = data.name;
+	})
+
 
 	socket.on('bad_setting', function(){
 		alert('Those settings will not work.');
@@ -529,7 +572,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 	})
 
 	socket.on('not_enough_players', function(){
-		alert('Not enough players to play.');
+		alert('Not enough players to start.');
 	})
 
 
@@ -562,15 +605,15 @@ app.directive('black', function () {
 	return {
 		restrict: 'A',
 		template:
-			'<div class="text">' +
-				'<span class="before_answer1"></span>' +
-				'<span class="answer1 answer">{{game.current_answer}}</span>' +
-				'<span class="after_answer1"></span>' +
-				'<span class="answer2 answer"></span>' +
-				'<span class="after_answer2"></span>' +
-			'</div>',
+			'<div class="text"> \
+				<span class="before_answer1"></span> \
+				<span class="answer1 answer">{{game.current_answer}}</span> \
+				<span class="after_answer1"></span> \
+				<span class="answer2 answer"></span> \
+				<span class="after_answer2"></span> \
+			</div>',
 		link: function(scope, element, attrs) {
-			element.addClass('card black');
+			element.addClass('black card');
 			
 			attrs.$observe('text', function(text) {
 				var text = text.replace(/--/g, '<wbr>').replace(/\\/g,'<br>').split('%s');
@@ -582,7 +625,6 @@ app.directive('black', function () {
 			if(attrs.card == 'black'){
 				console.log($('.text', this).html());
 			}
-			
 		}
 	}
 })
@@ -639,28 +681,48 @@ app.directive('inhand', function(){
 })
 
 
+app.directive('winner', function(){
+	return function(scope, element, attrs){
+
+		$(element).addClass('black card')
+
+		$(element).text(
+			$(element).data('text').replace('%s', $(element).data('answer'))
+		)
+
+	}
+})
+
+
 app.directive('modal', function(){
 	return {
-		restrict: 'E',
+		restrict: 'A',
 
 		transclude: true,
 
-		template: 
-			'<div class="modal">' +
-				'<div class="content" ng-transclude></div>' +
-				'<div class="close">' +
-					'<i class="fa fa-times"></i>' +
-				'</div>' +
-			'</div>',
+		template: '<div class="modal" ng-transclude></div>',
 
 		link: function(scope, element, attrs){
-			$('.close', element).click(function(){
-				console.log('close modal');
+			$(element).on('click', '.close', function(){
+				var modal_name = $(element).attr('modal');
+				scope.hide_modal(modal_name);
 			})
 		}
 	}
 })
 
+
+app.filter('contains_true', function(){
+	return function(input){
+
+		for(prop in input){
+			if(input[prop] == true) return;
+		}
+
+		return false;
+	}
+	
+})
 
 
 
