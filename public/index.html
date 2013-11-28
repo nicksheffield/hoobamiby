@@ -6,12 +6,48 @@
 	<title>Hoobamiby</title>
 	<link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.css" rel="stylesheet">
 	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,700|Roboto:400,300,100,100italic' rel='stylesheet' type='text/css'>
-	<!-- <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css"> -->
 	<link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body ng-app="app" ng-controller="cardsCtrl">
 
-	<div class="container" ng-switch="stage" ng-cloak ng-class="{full: stage=='intro'||stage=='browse',dark: stage=='game'}">
+
+
+
+
+
+
+
+
+
+
+	<div id="chat" ng-class="{open: chat_open&&stage!='intro'}">
+		<h2>Chat</h2>
+
+		<div class="messages">
+			<div class="message" ng-repeat="msg in chat"><span class="title">{{msg.title}}:</span> {{msg.message}}</div>
+		</div>
+
+		<form action="">
+			<input type="text" ng-model="chat_message" ng-cloak>
+			<button ng-click="send_message()">Send</button>
+		</form>
+
+		<!--<div class="handle" ng-click="toggle_chat()">
+			<i class="fa fa-comment"></i>
+		</div>-->
+	</div>
+
+
+
+
+
+
+
+
+
+
+
+	<div class="container" ng-switch="stage" ng-cloak ng-class="{full: stage=='intro'||stage=='browse',dark: stage=='game',narrow: chat_open&&stage != 'intro'}">
 
 
 
@@ -25,6 +61,7 @@
 
 		<header ng-hide="stage=='intro'" ng-cloak ng-class="{dark:stage=='game'}">
 			<ul class="navbar">
+				<li ng-show="stage!='intro'" ng-click="toggle_chat()" class="icon-only"><i class="fa fa-comments"></i></li>
 				<li ng-show="stage=='setup'&&player.host" ng-click="start()"><i class="fa fa-check"></i>Start Game</li>
 				<li ng-hide="stage=='intro'||stage=='browse'" ng-click="leaveGame()" ng-class="{slide:stage=='game'}"><i class="fa fa-times"></i><span>Leave Game</span></li>
 				<li ng-show="stage=='browse'" ng-click="createGame()"><i class="fa fa-plus"></i>Create Game</li>
@@ -189,7 +226,7 @@
 
 
 
-	<div class="player" ng-hide="stage=='browse'||stage=='intro'" ng-cloak>
+	<div class="player" ng-hide="stage=='browse'||stage=='intro'" ng-class="{narrow: chat_open&&stage != 'intro'}" ng-cloak>
 
 		<div class="left">
 			<h2>Players</h2>
@@ -202,6 +239,7 @@
 		
 		<div class="right">
 			<h2>Your Hand</h2>
+
 			<div class="you-are-czar" ng-show="player.czar" ng-cloak><span ng-show="player.real_man">You are the real man</span><span ng-hide="player.real_man">You are the Czar</span></div>
 			<div class="you-are-czar" ng-show="!player.active&&game.started" ng-cloak>Wait until next round</div>
 			<div class="hand">

@@ -952,7 +952,9 @@ module.exports = {
 			{text: "I cant believe youve done %s", pick: 1},
 			{text: "Mmm smells like %s", pick: 1},
 			{text: "but I %s from there!", pick: 1},
-			{text: "Looks like this %s just got turned into a %s2", pick: 2}
+			{text: "Looks like this %s just got turned into a %s2", pick: 2},
+			{text: "Brick.. you killed a guy with %s.", pick: 1},
+			{text: "The newly developed engine is fueled by %s.", pick: 1}
 		]
 	}
 };

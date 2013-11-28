@@ -29,14 +29,14 @@ app.controller('cardsCtrl', function ($scope, socket) {
 
 
 	$scope.blank_answer = '________';
+	$scope.chat_message = '';
 	$scope.stage = 'intro'; // intro -> browse -> setup -> game
 	$scope.games = [];
+	$scope.chat = [];
 	$scope.connected = false;
 	$scope.joining = false;
-
-	// for debug
-	window.scope = $scope;
-
+	$scope.chat_open = false;
+	$scope.chat_max = 50;
 
 	$scope.game = {
 		name: '',
@@ -110,15 +110,45 @@ app.controller('cardsCtrl', function ($scope, socket) {
 
 	$scope.playCard = function(elCard){
 		$scope.$apply(function(){
-			if(!$scope.player.played_card && !$scope.player.czar && !$scope.game.reveal && !$scope.game.end && $scope.player.active){
-				//$scope.game.current_whites.push({text: elCard.text(), player: $scope.player});
-				elCard.addClass('chosen');
 
-				$scope.game.current_whites = shuffle($scope.game.current_whites);
-
-				$scope.player.played_card = elCard.text();
-				socket.emit('play_card', {card: {text: elCard.text(), player: $scope.player}});
+			if($scope.player.played_card){
+				console.log('card already played');
+				return false;
 			}
+
+			if($scope.player.czar){
+				console.log('you are czar');
+				return false;
+			}
+
+			if($scope.game.reveal){
+				console.log('all the cards are currently revealed');
+
+				if($scope.game.current_whites.length == 0){
+					socket.emit('wipe');
+				}
+
+				return false;
+			}
+
+			if($scope.game.end){
+				console.log('the game is over');
+				return false;
+			}
+
+			if(!$scope.player.active){
+				console.log('you are not active');
+				return false;
+			}
+
+		
+			elCard.addClass('chosen');
+
+			$scope.game.current_whites = shuffle($scope.game.current_whites);
+
+			$scope.player.played_card = elCard.text();
+			socket.emit('play_card', {card: {text: elCard.text(), player: $scope.player}});
+			
 		})
 	}
 
@@ -208,6 +238,36 @@ app.controller('cardsCtrl', function ($scope, socket) {
 	$scope.show_modal = function(modal){
 		$scope.modal[modal] = true;
 		$scope.modal.showing = true;
+	}
+
+	$scope.toggle_chat = function(){
+		$scope.chat_open = $scope.chat_open ? false : true;
+	}
+
+	$scope.send_message = function(){
+		socket.emit('message_sent', {
+			title: $scope.player.name,
+			message: $scope.chat_message
+		})
+
+		$scope.chat_message = '';
+	}
+
+	$scope.add_message = function(title, message){
+		while($scope.chat.length > $scope.chat_max){
+			$scope.chat.shift();
+		}
+
+		$scope.chat.push({
+			title: title,
+			message: message
+		})
+
+		// http://stackoverflow.com/questions/270612/scroll-to-bottom-of-div
+		setTimeout(function(){
+			var objDiv = document.querySelector("#chat .messages");
+			objDiv.scrollTop = 999999;
+		}, 200)
 	}
 
 
@@ -573,6 +633,10 @@ app.controller('cardsCtrl', function ($scope, socket) {
 
 	socket.on('not_enough_players', function(){
 		alert('Not enough players to start.');
+	})
+
+	socket.on('message_received', function(data){
+		$scope.add_message(data.title, data.message);
 	})
 
 

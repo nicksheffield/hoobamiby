@@ -51,8 +51,7 @@
 		Version 1.5
 			Added silly name generator
 			Moved card list into external file expansions.js
-			Added easter eggs
-			Game no longer crashes when 
+			Server no longer crashes when all black cards have been used up
 			-Record of winning answers displayed at winner screen
 			-Multi pick cards implemented
 			
@@ -958,6 +957,14 @@ Names = [
 			socket.emit('name_given', {name: Names[parseInt(Math.random()*Names.length)]});
 
 			return;
+		})
+
+
+
+
+
+		socket.on('message_sent', function(data){
+			io.sockets.in(room).emit('message_received', data);
 		})
 
 
