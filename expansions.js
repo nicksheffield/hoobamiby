@@ -920,7 +920,19 @@ module.exports = {
 			'A face like a bucket of smashed crabs',
 			'A CENTER FOR ANTS',
 			'Smells like Bigfoot\'s dick!',
-			'Robots?'
+			'Robots?',
+			'A computer',
+			'All the downloadin!',
+			'fallopian tube spaghetti',
+			'A Ham Planet',
+			'Menstruation mouthwash',
+			'Ghost chips',
+			'SHUT THE FUCK UP',
+			'I love lamp',
+			'A coathanger attached to a vacuum cleaner',
+			'LOUD NOISES',
+			'ksdljhgsldghj',
+			'Sticking a midget to a fat person with super glue'
 		],
 		black: [
 			{text: "%s? Ten-outta-ten!", pick: 1},
@@ -931,7 +943,16 @@ module.exports = {
 			{text: "Say my name. %s", pick: 1},
 			{text: "%s has to be at least… three times bigger than this!", pick: 1},
 			{text: "%s. 60% of the time, it works every time.", pick: 1},
-			{text: "But can you do %s in 100!!! browser windows????", pick: 1}
+			{text: "But can you do %s in 100!!! browser windows????", pick: 1},
+			{text: "Hey kid! I'm %s", pick: 1},
+			{text: "WHAT IS THIS?? %s? IT NEEDS TO BE.. %s2!", pick: 2},
+			{text: "Argh! Right in the %s!", pick: 1},
+			{text: "Your mommas so fat, she's %s!", pick: 1},
+			{text: "%s... if you know what I mean.", pick: 1},
+			{text: "I cant believe youve done %s", pick: 1},
+			{text: "Mmm smells like %s", pick: 1},
+			{text: "but I %s from there!", pick: 1},
+			{text: "Looks like this %s just got turned into a %s2", pick: 2}
 		]
 	}
 };
