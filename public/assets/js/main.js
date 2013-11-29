@@ -36,7 +36,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 	$scope.connected = false;
 	$scope.joining = false;
 	$scope.chat_open = false;
-	$scope.chat_max = 50;
+	$scope.chat_max = 100;
 
 	$scope.game = {
 		name: '',
@@ -245,22 +245,25 @@ app.controller('cardsCtrl', function ($scope, socket) {
 	}
 
 	$scope.send_message = function(){
+		if($scope.chat_message == '') return;
+
 		socket.emit('message_sent', {
-			title: $scope.player.name,
+			title: $scope.player.name+':',
 			message: $scope.chat_message
 		})
 
 		$scope.chat_message = '';
 	}
 
-	$scope.add_message = function(title, message){
+	$scope.add_message = function(title, message, classname){
 		while($scope.chat.length > $scope.chat_max){
 			$scope.chat.shift();
 		}
 
 		$scope.chat.push({
 			title: title,
-			message: message
+			message: message,
+			class: classname
 		})
 
 		// http://stackoverflow.com/questions/270612/scroll-to-bottom-of-div
@@ -375,6 +378,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 			$scope.player.czar = false;
 
 			$scope.stage = 'browse';
+			socket.emit('to_browse');
 		}
 	})
 
@@ -594,6 +598,8 @@ app.controller('cardsCtrl', function ($scope, socket) {
 	socket.on('winner', function(data){
 		$scope.stage.end = true;
 
+		console.log(data);
+
 		// after 5 seconds
 		setTimeout(function(){
 			// show the victory screen with the new winner
@@ -636,7 +642,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 	})
 
 	socket.on('message_received', function(data){
-		$scope.add_message(data.title, data.message);
+		$scope.add_message(data.title, data.message, data.class);
 	})
 
 
@@ -748,11 +754,14 @@ app.directive('inhand', function(){
 app.directive('winner', function(){
 	return function(scope, element, attrs){
 
-		$(element).addClass('black card')
+		$(element).addClass('black card winner');
 
-		$(element).text(
-			$(element).data('text').replace('%s', $(element).data('answer'))
-		)
+		setTimeout(function(){
+			$(element).text(
+				$(element).data('text').replace('%s', $(element).data('answer'))
+			)
+		}, 10);
+		
 
 	}
 })

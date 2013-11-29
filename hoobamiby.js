@@ -52,6 +52,10 @@
 			Added silly name generator
 			Moved card list into external file expansions.js
 			Server no longer crashes when all black cards have been used up
+			Added chat box
+			Added chat box status messages
+			Victory screen is now taller
+			-Restart game button
 			-Record of winning answers displayed at winner screen
 			-Multi pick cards implemented
 			
@@ -197,7 +201,6 @@ Names = [
 	'Watermelone',
 	'Harold',
 	'Bernard',
-	'My Penis',
 	'Pikachu',
 	'Doge'
 ]
@@ -260,6 +263,8 @@ Names = [
 				}
 			}
 
+			socket.join('browse');
+			room = 'browse';
 
 			connected_players.push({
 				name: data.name,
@@ -318,7 +323,7 @@ Names = [
 			// a flag that tells me if the game was newly created or not
 			var created = false;
 
-			if(room == '') room = gamename;
+			room = gamename;
 			debug && console.log('join_game 3');
 
 			// If the room doesn't exist
@@ -339,6 +344,8 @@ Names = [
 			// join the room for this game
 			socket.join(room);
 
+			socket.leave('browse');
+
 			debug && console.log('join_game 5');
 
 			// ???
@@ -348,6 +355,10 @@ Names = [
 			var player = new Player();
 			player.name = process_player_name(Games[room], data.player.name.substr(0, 20));
 			player.socket_id = socket.id;
+
+			// send message to the game
+			socket.broadcast.to(room).emit('message_received', {title: player.name+" joined "+mygame.name, message: '', class: "join fa fa-arrow-right"});
+			socket.emit('message_received', {title: "You "+(created ? "created" : "joined")+" "+mygame.name, message: '', class: "join fa fa-plus"});
 
 			debug && console.log('join_game 6');
 
@@ -437,10 +448,10 @@ Names = [
 				io.sockets.in(room).emit('czar_left');
 			}
 
-			room = '';
-
 			// leave the socket room
 			socket.leave(data.name);
+			socket.join('browse');
+			room = 'browse';
 
 			debug && console.log('leave_game 2');
 
@@ -457,6 +468,10 @@ Names = [
 
 				// if any of the players have the same socket id as the one that just disconnected
 				if(thisgame.players[i].socket_id == socket.id){
+
+					// send message to the room
+					io.sockets.in(data.name).emit('message_received', {title: thisgame.players[i].name+" left "+thisgame.name, message: '', class: "leave fa fa-arrow-left"});
+					socket.emit('message_received', {title: "You left "+thisgame.name, message: '', class: "leave fa fa-times"});
 
 					// free up this users symbol
 					thisgame.symbolsInUse.splice(thisgame.symbolsInUse.indexOf(thisgame.players[i].symbol), 1);
@@ -520,6 +535,8 @@ Names = [
 			if(thisgame.players.length < 3 && thisgame.started || thisgame.players.length == 0){
 				// if so, close this game.
 				delete Games[data.name];
+
+				io.sockets.in(data.name).emit('message_received', {title: thisgame.name+' closed because there was not enough players.', message: '', class: "leave fa fa-warning"});
 
 				io.sockets.emit('game_closed', {name: data.name});
 			}
@@ -695,7 +712,8 @@ Names = [
 			}
 
 			if(mygame.players.length < 3){
-				socket.emit('not_enough_players');
+				//socket.emit('not_enough_players');
+				socket.emit('message_received', {title: 'You must have more than 3 players to start.', message: '', class: 'leave fa fa-warning'})
 				debug && console.log('not_enough_players /');
 				debug && console.log('');
 				return;
@@ -814,6 +832,13 @@ Names = [
 			
 			debug && console.log('choose_white 2');
 
+			mygame.winners.push({
+				black: mygame.current_black,
+				white: data.card
+			});
+
+			debug && console.log('choose_white 3');
+
 			// award points
 
 			// look through all the white cards
@@ -839,6 +864,9 @@ Names = [
 								debug && console.log('choose_white loop 5');
 
 								io.sockets.in(room).emit('winner', {player: mygame.players[j], winners: mygame.winners});
+								io.sockets.in(data.name).emit('message_received', {title: mygame.players[j].name+" wins the whole game", class: "point fa fa-trophy"});
+							}else{
+								io.sockets.in(data.name).emit('message_received', {title: mygame.players[j].name+" won a round", class: "point fa fa-star"});
 							}
 
 							break;
@@ -849,7 +877,7 @@ Names = [
 				}
 			}
 
-			debug && console.log('choose_white 3');
+			debug && console.log('choose_white 4');
 
 			// remove cards
 
@@ -875,19 +903,14 @@ Names = [
 				}
 			}
 
-			mygame.winners.push({
-				black: mygame.current_black,
-				white: data.card
-			});
-
-			debug && console.log('choose_white 4');
+			debug && console.log('choose_white 5');
 
 			mygame.reveal = false;
 
 			// clear the list of white cards that were played
 			mygame.current_whites = [];
 
-			debug && console.log('choose_white 5');
+			debug && console.log('choose_white 6');
 
 			// to all in room
 			io.sockets.in(room).emit('white_chosen', data);
@@ -957,6 +980,13 @@ Names = [
 			socket.emit('name_given', {name: Names[parseInt(Math.random()*Names.length)]});
 
 			return;
+		})
+
+
+		socket.on('to_browse', function(){
+			socket.leave(room);
+			room = 'browse';
+			socket.join(room);
 		})
 
 
@@ -1051,6 +1081,8 @@ Names = [
 				if(thisgame.players.length < 3 && thisgame.started || thisgame.players.length == 0){
 					// if so, close this game.
 					delete Games[game];
+
+					io.sockets.in(data.name).emit('message_received', {title: thisgame.name+' closed because there was not enough players.', message: '', class: "leave fa fa-warning"});
 
 					io.sockets.emit('game_closed', {name: game});
 				}

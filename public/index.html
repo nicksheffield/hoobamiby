@@ -20,11 +20,11 @@
 
 
 
-	<div id="chat" ng-class="{open: chat_open&&stage!='intro'}">
+	<div id="chat" ng-class="{open: chat_open&&stage!='intro'}" ng-hide="stage=='intro'">
 		<h2>Chat</h2>
 
 		<div class="messages">
-			<div class="message" ng-repeat="msg in chat"><span class="title">{{msg.title}}:</span> {{msg.message}}</div>
+			<div ng-repeat="msg in chat" class="message {{msg.class}}"><span class="inner"><span class="title">{{msg.title}}</span> {{msg.message}}</span></div>
 		</div>
 
 		<form action="">
@@ -47,7 +47,7 @@
 
 
 
-	<div class="container" ng-switch="stage" ng-cloak ng-class="{full: stage=='intro'||stage=='browse',dark: stage=='game',narrow: chat_open&&stage != 'intro'}">
+	<div class="container" ng-switch="stage" ng-cloak ng-class="{full: stage=='intro'||stage=='browse'||stage=='victory',dark: stage=='game',narrow: chat_open&&stage != 'intro'}">
 
 
 
@@ -79,7 +79,7 @@
 
 
 		<div class="intro panel" ng-switch-when="intro">
-			<h1>Hoobamiby</h1>
+			<h1>Hoobamiby <small>&beta;</small></h1>
 			
 			<form action="">
 				<input type="text" id="player_name" ng-model="player.name" placeholder="What is your name?" maxlength="20">
@@ -207,10 +207,9 @@
 
 
 		<div class="victory panel" ng-switch-when="victory">
-			<h1>We have a winner!</h1>
-			<p>{{game.winner.name}} with {{game.winner.score}} <em>Awesome Points</em>!</p>
+			<h1>{{game.winner.name}} wins with {{game.winner.score}} <em>Awesome Points</em>!</h1>
 
-			<div ng-repeat="winner in game.winners" winner data-text="{{winner.black.text}}" data-answer="{{winner.white.text}}"></div>
+			<div ng-repeat="winner in game.winners" winner data-text="{{winner.black[0].text}}" data-answer="{{winner.white.text}}"></div>
 		</div>
 
 
@@ -226,7 +225,7 @@
 
 
 
-	<div class="player" ng-hide="stage=='browse'||stage=='intro'" ng-class="{narrow: chat_open&&stage != 'intro'}" ng-cloak>
+	<div class="player" ng-hide="stage=='browse'||stage=='intro'||stage=='victory'" ng-class="{narrow: chat_open&&stage != 'intro'}" ng-cloak>
 
 		<div class="left">
 			<h2>Players</h2>

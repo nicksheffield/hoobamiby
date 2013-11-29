@@ -134,7 +134,7 @@ module.exports = {
 			'Dead parents',
 			'Dental dams',
 			'Destroying the evidence',
-			'Dick Cheney',
+			// 'Dick Cheney',
 			'Dick fingers',
 			'Doin\' it in the butt',
 			'Doing the right thing',
@@ -490,7 +490,7 @@ module.exports = {
 			{text: "For my next trick, I will pull %s out of %s2.", pick: 2},
 			{text: "In the new Disney Channel Original Movie, Hannah Montana struggles with %s for the first time.", pick: 1},
 			{text: "%s is a slippery slope that leads to %s2.", pick: 2},
-			{text: "What does Dick Cheney prefer?  %s", pick: 1},
+			// {text: "What does Dick Cheney prefer?  %s", pick: 1},
 			{text: "Dear Abby, I'm having some trouble with %s and would like your advice.", pick: 1},
 			{text: "Instead of coal, santa now gives the bad children %s.", pick: 1},
 			{text: "What's the most emo? %s", pick: 1},
@@ -932,16 +932,21 @@ module.exports = {
 			'A coathanger attached to a vacuum cleaner',
 			'LOUD NOISES',
 			'ksdljhgsldghj',
-			'Sticking a midget to a fat person with super glue'
+			'Sticking a midget to a fat person with super glue',
+			'Hairy Boobs',
+			'Pepperoni nips',
+			'Ghost Mustard',
+			'Laddergoat',
+			'420'
 		],
 		black: [
 			{text: "%s? Ten-outta-ten!", pick: 1},
 			{text: "AND YOU THINK THAT OF ME?\\I AM THE ONE WHO IS %s", pick: 1},
-			{text: "Yeah! %s bitch!", pick: 1},
+			{text: "Yeah! %s, bitch!", pick: 1},
 			{text: "WHERE IS HE? %s", pick: 1},
 			{text: "You’re an insane, degenerate piece of filth, and you deserve %s", pick: 1},
 			{text: "Say my name. %s", pick: 1},
-			{text: "%s has to be at least… three times bigger than this!", pick: 1},
+			{text: "%s has to be at least... three times bigger than this!", pick: 1},
 			{text: "%s. 60% of the time, it works every time.", pick: 1},
 			{text: "But can you do %s in 100!!! browser windows????", pick: 1},
 			{text: "Hey kid! I'm %s", pick: 1},
@@ -949,12 +954,16 @@ module.exports = {
 			{text: "Argh! Right in the %s!", pick: 1},
 			{text: "Your mommas so fat, she's %s!", pick: 1},
 			{text: "%s... if you know what I mean.", pick: 1},
-			{text: "I cant believe youve done %s", pick: 1},
+			{text: "I can't believe you've done %s", pick: 1},
 			{text: "Mmm smells like %s", pick: 1},
-			{text: "but I %s from there!", pick: 1},
+			// {text: "But I %s from there!", pick: 1},
 			{text: "Looks like this %s just got turned into a %s2", pick: 2},
 			{text: "Brick.. you killed a guy with %s.", pick: 1},
-			{text: "The newly developed engine is fueled by %s.", pick: 1}
+			{text: "The newly developed engine is fueled by %s.", pick: 1},
+			{text: "Who you gonna call? %s", pick: 1},
+			{text: "All these %s man.", pick: 1},
+			{text: "Give him the %s. DON'T give him the %s!", pick: 2},
+			{text: "Na na na na na na na na na %s-man!", pick: 1}
 		]
 	}
 };
