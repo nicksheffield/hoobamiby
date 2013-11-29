@@ -1,7 +1,7 @@
 var app = angular.module('app', [])
 
 app.factory('socket', function ($rootScope) {
-	var socket = io.connect('http://192.241.191.126:8004');
+	var socket = io.connect(location.origin+':8004');
 	return {
 		on: function (eventName, callback) {
 			socket.on(eventName, function () {
