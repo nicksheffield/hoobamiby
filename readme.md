@@ -19,9 +19,4 @@ Inspired by [Pretend You're Xyzzy](http://pyz.socialgamer.net/game.jsp).
 Runs on node.js, using socket.io and angular.js
 
 
-###Todo
-
-*   Multi pick cards implemented
-*   Record of winning answers displayed at winner screen
-*   Support for expansions
-*   When czar leaves and the cards are revealed, everything bugs out
+View at [hoobamiby.com](http://hoobamiby.com/)
