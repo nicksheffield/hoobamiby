@@ -70,7 +70,8 @@ app             = express(),
 server          = require('http').createServer(app),
 io              = require('socket.io').listen(server, {log: false}),
 path            = require('path'),
-lessMiddleware  = require('less-middleware')
+lessMiddleware  = require('less-middleware'),
+stylus 			= require('stylus')
 
 
 
@@ -215,10 +216,12 @@ Names = [
 	app.configure(function(){
 
 		// Process less files
-		app.use(lessMiddleware({
-			src : __dirname + "/public",
-			compress : true
-		}))
+		// app.use(lessMiddleware({
+		// 	src : __dirname + "/public",
+		// 	compress : true
+		// }))
+
+		app.use(require('stylus').middleware(__dirname + '/public'));
 
 		// allow direct access to files in the public directory
 		app.use(express.static(__dirname + '/public'));
