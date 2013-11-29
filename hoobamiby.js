@@ -101,7 +101,7 @@ var
 
 Games                   = {},
 connected_players       = [],
-debug                   = true,
+debug                   = false,
 
 
 Game = function() {

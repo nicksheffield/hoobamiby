@@ -335,7 +335,8 @@ header.dark li:hover {
   background: #fff url("../img/whitediamond.png");
   height: 40%;
 }
-.player.narrow width -webkit-calc(100%334px) {
+.player.narrow {
+  width: -webkit-calc(100% - 334px);
   width: calc(100% - 334px);
 }
 .player h2 {
@@ -386,7 +387,7 @@ header.dark li:hover {
   -webkit-font-smoothing: antialiased;
 }
 .player .players li.winner {
-  background: ;
+  background: #f1c40f;
   color: #000;
 }
 .player .hand {
@@ -445,6 +446,7 @@ header.dark li:hover {
   margin: 8px 0 0 8px;
   position: relative;
   hyphens: auto;
+  cursor: pointer;
   -webkit-transition: all 0.1s;
   -moz-transition: all 0.1s;
   -ms-transition: all 0.1s;
@@ -467,9 +469,9 @@ header.dark li:hover {
   background: #fff;
   color: #000;
 }
-.card.choosehover,
+.card.choose:hover,
 .card.chosen {
-  background: ;
+  background: #f1c40f;
 }
 .card.chosen:not(.small) .star {
   opacity: 1;
@@ -533,7 +535,7 @@ header.dark li:hover {
   color: #000;
 }
 .card span.answer {
-  color: ;
+  color: #f1c40f;
 }
 .card span.answer.newline {
   margin-top: 1em;
