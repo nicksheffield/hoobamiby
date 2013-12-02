@@ -63,6 +63,7 @@
 			<ul class="navbar">
 				<li ng-show="stage!='intro'" ng-click="toggle_chat()" class="icon-only"><i class="fa fa-comments"></i></li>
 				<li ng-show="stage=='setup'&&player.host" ng-click="start()"><i class="fa fa-check"></i>Start Game</li>
+				<li ng-show="stage=='victory'&&player.host" ng-click="reset_game()"><i class="fa fa-refresh"></i>Play again</li>
 				<li ng-hide="stage=='intro'||stage=='browse'" ng-click="leaveGame()" ng-class="{slide:stage=='game'}"><i class="fa fa-times"></i><span>Leave Game</span></li>
 				<li ng-show="stage=='browse'" ng-click="createGame()"><i class="fa fa-plus"></i>Create Game</li>
 			</ul>
@@ -275,7 +276,7 @@
 
 
 
-	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="/assets/js/main.js"></script>

@@ -76,6 +76,8 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		not_enough_players: false,
 		showing: false
 	}
+	
+	window.scope = $scope;
 
 
 	$scope.$watch('player.name', function(new_val, old_val){
@@ -273,6 +275,10 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		}, 200)
 	}
 
+	$scope.reset_game = function(){
+		socket.emit('reset_game', {name: $scope.game.name});
+	}
+
 
 	// when you connect to a game
 	socket.on('connected', function(data){
@@ -424,6 +430,23 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		$scope.game = merge($scope.game, data.settings);
 	})
 
+	// when this game is reset
+	socket.on('game_reset', function(data){
+
+		$scope.stage = 'setup';
+
+		$scope.player.hand = [];
+		$scope.player.score = 0;
+		$scope.player.czar = false;
+		$scope.player.played_card = false;
+		$scope.player.winner = false;
+		$scope.player.active = false;
+		$scope.player.real_man = parseInt(Math.random()*20)==1;
+
+		$scope.game = data.game;
+		$scope.game.winner = false;
+	})
+
 
 	// when this game is started
 	socket.on('start_game', function(data){
@@ -534,6 +557,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 					// and cause everyone's screen to wipe, ready for the next round
 					socket.emit('wipe');
 					socket.emit('request_black');
+					console.log('gimme dat black');
 				}, 5000);
 
 			}else{

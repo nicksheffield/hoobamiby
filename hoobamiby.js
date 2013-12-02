@@ -192,7 +192,7 @@ Names = [
 	'Rare Akuma',
 	'Duane',
 	'Giygas',
-	'Shuma Gorath',
+	'The Batman',
 	'Alf Stewart',
 	'Gooby',
 	'Dolan',
@@ -256,6 +256,7 @@ Names = [
 		var room = '';
 		var mygame;
 		var myplayer;
+		var last_name = '';
 
 
 		socket.on('browse', function(data){
@@ -759,6 +760,26 @@ Names = [
 		})
 
 
+		socket.on('reset_game', function(data){
+			var newgame = new Game();
+
+			newgame.name = mygame.name;
+			newgame.score_limit = mygame.score_limit;
+			newgame.player_limit = mygame.player_limit;
+			newgame.players = mygame.players;
+
+			for(var i=0;i<newgame.players.length;i++){
+				newgame.players[i].score = 0;
+				newgame.players[i].czar = false;
+			}
+
+			Games[room] = newgame;
+
+			// to all in room
+			io.sockets.in(room).emit('game_reset', {game: mygame});
+		})
+
+
 
 		socket.on('play_card', function(data){
 			debug && console.log('play_card 1');
@@ -770,11 +791,13 @@ Names = [
 				return;
 			}
 
+
 			mygame.current_whites.push(data.card);
 
 			debug && console.log('play_card 2');
 
-			var n = 0;
+			var n = 0,
+				a = 0
 
 			// loop through all players again
 			for(var j=0;j<mygame.players.length;j++){
@@ -786,11 +809,6 @@ Names = [
 						n++;
 					}
 				}
-			}
-
-			var a = 0;
-
-			for(var j=0;j<mygame.players.length;j++){
 				if(mygame.players[j].active){
 					a++;
 				}
@@ -980,7 +998,15 @@ Names = [
 
 
 		socket.on('request_name', function(){
-			socket.emit('name_given', {name: Names[parseInt(Math.random()*Names.length)]});
+			var name = '';
+
+			do{
+				name = Names[parseInt(Math.random()*Names.length)]
+			}while(name == last_name);
+
+			last_name = name;
+
+			socket.emit('name_given', {name: name});
 
 			return;
 		})
