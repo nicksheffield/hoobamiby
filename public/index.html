@@ -240,7 +240,7 @@
 		<div class="right">
 			<h2>Your Hand</h2>
 
-			<div class="you-are-czar" ng-show="player.czar" ng-cloak><span ng-show="player.real_man">You are the real man</span><span ng-hide="player.real_man">You are the Czar</span></div>
+			<div class="you-are-czar" ng-show="player.czar" ng-cloak><span ng-show="player.real_man">Vodka! You are the real man!</span><span ng-hide="player.real_man">You are the Czar</span></div>
 			<div class="you-are-czar" ng-show="!player.active&&game.started" ng-cloak>Wait until next round</div>
 			<div class="hand">
 				<div card="white" class="small" answer inhand ng-repeat="card in player.hand" ng-class="{choose: !player.played_card}" ng-cloak>{{card}}</div>

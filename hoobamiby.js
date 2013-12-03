@@ -55,8 +55,9 @@
 			Added chat box
 			Added chat box status messages
 			Victory screen is now taller
-			-Restart game button
-			-Record of winning answers displayed at winner screen
+			Restart game button
+			Players that leave after a match has ended, and before it has started again will no longer cause infinite loop upon rejoin
+			Record of winning answers displayed at winner screen works, but currently hidden because it's ugly
 			-Multi pick cards implemented
 			
 
@@ -102,7 +103,7 @@ var
 
 Games                   = {},
 connected_players       = [],
-debug                   = false,
+debug                   = true,
 
 
 Game = function() {
@@ -111,7 +112,6 @@ Game = function() {
 	this.score_limit    = 8;
 	this.player_limit   = 11;
 	this.players        = [];
-	this.house_rules    = [];
 	this.current_black  = [];
 	this.current_whites = [];
 	this.cards          = [];
@@ -310,7 +310,7 @@ Names = [
 
 			// if the game name was provided
 			}else{
-						
+				
 				debug && console.log('join_game n4');
 				
 				// connect to that game
@@ -333,6 +333,7 @@ Names = [
 
 			// If the room doesn't exist
 			if(typeof Games[room] == undefined || !Games[room]){
+				console.log('creating game' + room);
 
 				created = true;
 
@@ -353,12 +354,9 @@ Names = [
 
 			debug && console.log('join_game 5');
 
-			// ???
-			//data.player.socket_id = socket.id;
-
 			// create them
 			var player = new Player();
-			player.name = process_player_name(Games[room], data.player.name.substr(0, 20));
+			player.name = data.player.name.substr(0, 20); // limit the name to only 20 char's
 			player.socket_id = socket.id;
 
 			// send message to the game
@@ -404,28 +402,7 @@ Names = [
 			debug && console.log('join_game 12');
 
 
-			function process_player_name(game, player_name){
-				var arr = [];
-
-				for(var i=0;i<game.players.length;i++){
-					arr.push(game.players[i].name);
-				}
-
-				if(arr.indexOf(player_name) != -1){
-					var n = 2;
-					var fin = false;
-
-					while(!fin){
-						if(arr.indexOf(player_name+' ('+n+')') == -1){
-							return player_name + ' ('+n+')';
-						}else{
-							n += 1;
-						}
-					}
-				}else{
-					return player_name;
-				}
-			}
+			
 			debug && console.log('join_game 13/');
 			debug && console.log('');
 
@@ -433,7 +410,7 @@ Names = [
 
 		})
 
-		
+
 
 		socket.on('leave_game', function(data){
 
@@ -469,68 +446,50 @@ Names = [
 			debug && console.log('leave_game 4');
 
 			// look through all the players in this game
-			for(var i=0;i<thisgame.players.length;i++){
+			var _player = _.findWhere(thisgame.players, {socket_id: socket.id});
 
-				// if any of the players have the same socket id as the one that just disconnected
-				if(thisgame.players[i].socket_id == socket.id){
+			// send message to the room
+			io.sockets.in(data.name).emit('message_received', {title: _player.name+" left "+thisgame.name, message: '', class: "leave fa fa-arrow-left"});
+			socket.emit('message_received', {title: "You left "+thisgame.name, message: '', class: "leave fa fa-times"});
 
-					// send message to the room
-					io.sockets.in(data.name).emit('message_received', {title: thisgame.players[i].name+" left "+thisgame.name, message: '', class: "leave fa fa-arrow-left"});
-					socket.emit('message_received', {title: "You left "+thisgame.name, message: '', class: "leave fa fa-times"});
+			// free up this users symbol
+			thisgame.symbolsInUse.splice(thisgame.symbolsInUse.indexOf(_player.symbol), 1);
 
-					// free up this users symbol
-					thisgame.symbolsInUse.splice(thisgame.symbolsInUse.indexOf(thisgame.players[i].symbol), 1);
+			// remove him from the player list.
+			thisgame.players = _.reject(thisgame.players, function(player){
+				return player.socket_id == _player.socket_id;
+			})
 
-					// remove him from the player list.
-					thisgame.players.splice(i, 1);
-
-					// go through all the cards that have been played
-					for(var j=0;j<thisgame.current_whites.length;j++){
-						// and if we find his
-						if(thisgame.current_whites[j].player.socket_id == socket.id){
-							// remove it.
-							thisgame.current_whites.splice(j, 1);
-						}
-					}
+			// go through all the cards that have been played
+			thisgame.current_whites = _.reject(thisgame.current_whites, function(white){
+				return white.socket_id == _player.socket_id;
+			})
 
 
-					var n = 0;
+			var n = 0,
+				a = 0;
 
-					// loop through all players again
-					for(var j=0;j<thisgame.players.length;j++){
-						// and check if this player has a card in the current_whites
-						for(var k=0;k<thisgame.current_whites.length;k++){
-							// if they do
-							if(thisgame.current_whites[k].player.socket_id == thisgame.players[j].socket_id){
-								// increase n by one
-								n++;
-							}
-						}
-					}
+			// count how many cards are owned by players
+			_.each(thisgame.players, function(player, i){
+				_.each(thisgame.current_whites, function(white, i){
+					if(white.socket_id == player.socket_id) n++;
+				})
 
-					var a = 0;
+				if(player.active) a++;
+			})
 
-					for(var j=0;j<thisgame.players.length;j++){
-						if(thisgame.players[j].active){
-							a++;
-						}
-					}
 
-					// if n == players.length then every player has played a card, so reveal.
-					thisgame.reveal = n == a - 1;
-					//console.log('thisgame.current_whites.length: '+thisgame.current_whites.length);
-					//console.log('thisgame.players.length: '+(thisgame.players.length-1));
+			// if n == players.length then every player has played a card, so reveal.
+			thisgame.reveal = n == a - 1;
 
-					// emit that the user left
+			// emit that the user left
 
-					// to everyone in the room
-					io.sockets.in(data.name).emit('player_left', {socket_id: socket.id, game: thisgame});
-					// to everyone
-					io.sockets.emit('game_players_updated', {room: Games[data.name]});
-					// to you
-					socket.emit('left_game');
-				}
-			}
+			// to everyone in the room
+			io.sockets.in(data.name).emit('player_left', {socket_id: socket.id, game: thisgame});
+			// to everyone
+			io.sockets.emit('game_players_updated', {room: Games[data.name]});
+			// to you
+			socket.emit('left_game');
 
 			mygame = false;
 
@@ -605,11 +564,10 @@ Names = [
 				var card;
 
 				debug && console.log('request_card 2');
-
+				
 				do{
 					card = mygame.cards[parseInt(Math.random() * mygame.cards.length)];
 				}while(mygame.cardsInUse.indexOf(card) != -1);
-
 
 				debug && console.log('request_card 3');
 
@@ -621,14 +579,13 @@ Names = [
 			debug && console.log('request_card 4');
 
 			for(game in Games){
-				// loop through all players in this game
-				for(var i=0;i<Games[game].players.length;i++){
-					// if this player is the one with the socket_id
-					if(Games[game].players[i].socket_id == socket.id){
+				var thisgame = Games[game];
 
-						Games[game].players[i].hand = merge(Games[game].players[i].hand, cards);
+				_.each(thisgame.players, function(player, i){
+					if(player.socket_id == socket.id){
+						player.hand = merge(thisgame.players[i].hand, cards);
 					}
-				}
+				})
 			}
 
 			debug && console.log('request_card 5');
@@ -682,9 +639,9 @@ Names = [
 
 			debug && console.log('request_black 6');
 
-			for(var i=0;i<mygame.players.length;i++){
-				mygame.players[i].active = true;
-			}
+			_.each(mygame.players, function(player){
+				player.active = true;
+			})
 
 			debug && console.log('request_black 7');
 
@@ -730,6 +687,9 @@ Names = [
 
 			mygame.expansions = data.game.expansions;
 
+			// clear the cards before we add them all in from expansions
+			mygame.cards = [];
+
 			// create the list of cards available from all the expansions
 			for(expansion in mygame.expansions){
 				var exp = Expansions[expansion];
@@ -762,22 +722,36 @@ Names = [
 
 
 		socket.on('reset_game', function(data){
-			var newgame = new Game();
 
-			newgame.name = mygame.name;
-			newgame.score_limit = mygame.score_limit;
-			newgame.player_limit = mygame.player_limit;
-			newgame.players = mygame.players;
+			debug && console.log('reset_game 1');
 
-			for(var i=0;i<newgame.players.length;i++){
-				newgame.players[i].score = 0;
-				newgame.players[i].czar = false;
+			mygame.current_black = [];
+			mygame.current_whites = [];
+			mygame.cardsInUse = [];
+			mygame.blacksInUse = [];
+			mygame.symbolsInUse = [];
+			mygame.started = false;
+			mygame.chosen = false;
+			mygame.current_answer = '________';
+
+			debug && console.log('reset_game 2');
+
+			for(var i=0;i<mygame.players.length;i++){
+				mygame.players[i].score = 0;
+				mygame.players[i].czar = false;
 			}
 
-			Games[room] = newgame;
+			debug && console.log('reset_game 3');
+
+			//Games[room] = newgame;
 
 			// to all in room
 			io.sockets.in(room).emit('game_reset', {game: mygame});
+
+			debug && console.log('reset_game /');
+			debug && console.log('');
+
+			return;
 		})
 
 
@@ -801,19 +775,13 @@ Names = [
 				a = 0
 
 			// loop through all players again
-			for(var j=0;j<mygame.players.length;j++){
-				// and check if this player has a card in the current_whites
-				for(var k=0;k<mygame.current_whites.length;k++){
-					// if they do
-					if(mygame.current_whites[k].player.socket_id == mygame.players[j].socket_id){
-						// increase n by one
-						n++;
-					}
-				}
-				if(mygame.players[j].active){
-					a++;
-				}
-			}
+			_.each(thisgame.players, function(player, i){
+				_.each(thisgame.current_whites, function(white, i){
+					if(white.socket_id == player.socket_id) n++;
+				})
+
+				if(player.active) a++;
+			})
 
 			// if n == players.length then every player has played a card, so reveal.
 			mygame.reveal = n == a - 1;

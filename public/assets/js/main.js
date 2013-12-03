@@ -97,7 +97,9 @@ app.controller('cardsCtrl', function ($scope, socket) {
 	
 
 	$scope.start = function(){
+		console.log('emitting: game_started');
 		socket.emit('game_started', {game: $scope.game});
+		console.log($scope.game);
 	}
 
 
@@ -489,16 +491,14 @@ app.controller('cardsCtrl', function ($scope, socket) {
 
 	// when the black card is dealt
 	socket.on('deal_black', function(data){
-		$scope.game.current_black = [];
-
-		$scope.player.active = true;
-
 		if(data.card.pick != 1 && $scope.player.host){
 			socket.emit('request_black');
 			console.log('requesting a new black card');
 			return;
 		}
 
+		$scope.player.active = true;
+		$scope.game.current_black = [];
 		$scope.game.current_black.push(data.card);
 	})
 
@@ -699,12 +699,12 @@ app.directive('black', function () {
 	return {
 		restrict: 'A',
 		template:
-			'<div class="text"> \
-				<span class="before_answer1"></span> \
-				<span class="answer1 answer">{{game.current_answer}}</span> \
-				<span class="after_answer1"></span> \
-				<span class="answer2 answer"></span> \
-				<span class="after_answer2"></span> \
+			'<div class="text">\
+<span class="before_answer1"></span>\
+<span class="answer1 answer">{{game.current_answer}}</span>\
+<span class="after_answer1"></span>\
+<span class="answer2 answer"></span>\
+<span class="after_answer2"></span>\
 			</div>',
 		link: function(scope, element, attrs) {
 			element.addClass('black card');
