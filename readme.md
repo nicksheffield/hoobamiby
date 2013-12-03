@@ -16,7 +16,7 @@ A Cards Against Humanity clone
 
 Inspired by [Pretend You're Xyzzy](http://pyz.socialgamer.net/game.jsp).
 
-Runs on node.js, using socket.io and angular.js
+Runs on node.js, using socket.io, angular.js and stylus
 
 
 View at [hoobamiby.com](http://hoobamiby.com/)
