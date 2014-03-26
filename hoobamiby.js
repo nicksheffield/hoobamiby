@@ -58,6 +58,7 @@
 			Restart game button
 			Players that leave after a match has ended, and before it has started again will no longer cause infinite loop upon rejoin
 			Record of winning answers displayed at winner screen works, but currently hidden because it's ugly
+
 			-Multi pick cards implemented
 			
 
@@ -72,7 +73,7 @@ server          = require('http').createServer(app),
 io              = require('socket.io').listen(server, {log: false}),
 path            = require('path'),
 lessMiddleware  = require('less-middleware'),
-stylus 			= require('stylus'),
+stylus          = require('stylus'),
 _               = require('underscore')
 
 
