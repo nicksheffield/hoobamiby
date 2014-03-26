@@ -78,6 +78,7 @@ app             = express(),
 server          = require('http').createServer(app),
 io              = require('socket.io').listen(server, {log: false}),
 path            = require('path'),
+stylus          = require('stylus'),
 _               = require('underscore')
 
 
@@ -223,7 +224,10 @@ Names = [
 
 	app.configure(function(){
 
-		app.use(require('stylus').middleware(__dirname + '/public'));
+		app.use(stylus.middleware({
+			src: __dirname + '/public',
+			compress: true
+		}));
 
 		// allow direct access to files in the public directory
 		app.use(express.static(__dirname + '/public'));
