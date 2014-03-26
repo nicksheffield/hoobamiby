@@ -223,7 +223,10 @@ Names = [
 		// 	compress : true
 		// }))
 
-		app.use(require('stylus').middleware(__dirname + '/public'));
+		app.use(stylus.middleware({
+			src: __dirname + '/public',
+			compress: true
+		}));
 
 		// allow direct access to files in the public directory
 		app.use(express.static(__dirname + '/public'));
