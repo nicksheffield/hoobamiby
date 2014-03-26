@@ -244,9 +244,11 @@ app.controller('cardsCtrl', function ($scope, socket) {
 		$scope.modal.showing = true;
 	}
 
+
 	$scope.toggle_chat = function(){
 		$scope.chat_open = $scope.chat_open ? false : true;
 	}
+
 
 	$scope.send_message = function(){
 		if($scope.chat_message == '') return;
@@ -258,6 +260,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 
 		$scope.chat_message = '';
 	}
+
 
 	$scope.add_message = function(title, message, classname){
 		while($scope.chat.length > $scope.chat_max){
@@ -276,6 +279,7 @@ app.controller('cardsCtrl', function ($scope, socket) {
 			objDiv.scrollTop = 999999;
 		}, 200)
 	}
+
 
 	$scope.reset_game = function(){
 		socket.emit('reset_game', {name: $scope.game.name});

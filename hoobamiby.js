@@ -58,7 +58,14 @@
 			Restart game button
 			Players that leave after a match has ended, and before it has started again will no longer cause infinite loop upon rejoin
 			Record of winning answers displayed at winner screen works, but currently hidden because it's ugly
+			-There is currently a bug where a restarted game will not automatically close when less than 3 players are present
 			-Multi pick cards implemented
+			-shuffle server side
+			-add kick functionality
+			-sometimes card recycle from pick 2's doesn't work I don't think
+			-cards seem to be appearing more than once in a round
+
+			-maybe remove symbols. have scores where symbols are now, and a status on the right hand side
 			
 
 
@@ -71,8 +78,6 @@ app             = express(),
 server          = require('http').createServer(app),
 io              = require('socket.io').listen(server, {log: false}),
 path            = require('path'),
-lessMiddleware  = require('less-middleware'),
-stylus 			= require('stylus'),
 _               = require('underscore')
 
 
@@ -180,7 +185,9 @@ Symbols = [
 	'moon-o',
 	'shield',
 	'sun-o',
-	'tint'
+	'tint',
+	'leaf',
+	'eye'
 ],
 
 Names = [
@@ -215,12 +222,6 @@ Names = [
 // Static Routes
 
 	app.configure(function(){
-
-		// Process less files
-		// app.use(lessMiddleware({
-		// 	src : __dirname + "/public",
-		// 	compress : true
-		// }))
 
 		app.use(require('stylus').middleware(__dirname + '/public'));
 
@@ -775,13 +776,19 @@ Names = [
 				a = 0
 
 			// loop through all players again
-			_.each(thisgame.players, function(player, i){
-				_.each(thisgame.current_whites, function(white, i){
-					if(white.socket_id == player.socket_id) n++;
-				})
-
-				if(player.active) a++;
-			})
+			for(var j=0;j<mygame.players.length;j++){
+				// and check if this player has a card in the current_whites
+				for(var k=0;k<mygame.current_whites.length;k++){
+					// if they do
+					if(mygame.current_whites[k].player.socket_id == mygame.players[j].socket_id){
+						// increase n by one
+						n++;
+					}
+				}
+				if(mygame.players[j].active){
+					a++;
+				}
+			}
 
 			// if n == players.length then every player has played a card, so reveal.
 			mygame.reveal = n == a - 1;

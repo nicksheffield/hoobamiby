@@ -31,10 +31,6 @@
 			<input type="text" ng-model="chat_message" ng-cloak>
 			<button ng-click="send_message()">Send</button>
 		</form>
-
-		<!--<div class="handle" ng-click="toggle_chat()">
-			<i class="fa fa-comment"></i>
-		</div>-->
 	</div>
 
 
@@ -61,11 +57,25 @@
 
 		<header ng-hide="stage=='intro'" ng-cloak ng-class="{dark:stage=='game'}">
 			<ul class="navbar">
-				<li ng-show="stage!='intro'" ng-click="toggle_chat()" class="icon-only"><i class="fa fa-comments"></i></li>
-				<li ng-show="stage=='setup'&&player.host" ng-click="start()"><i class="fa fa-check"></i>Start Game</li>
-				<li ng-show="stage=='victory'&&player.host" ng-click="reset_game()"><i class="fa fa-refresh"></i>Play again</li>
-				<li ng-hide="stage=='intro'||stage=='browse'" ng-click="leaveGame()" ng-class="{slide:stage=='game'}"><i class="fa fa-times"></i><span>Leave Game</span></li>
-				<li ng-show="stage=='browse'" ng-click="createGame()"><i class="fa fa-plus"></i>Create Game</li>
+				<li ng-show="stage!='intro'" ng-click="toggle_chat()" class="icon-only">
+					<i class="fa fa-comments"></i>
+				</li>
+
+				<li ng-show="stage=='setup'&&player.host" ng-click="start()">
+					<i class="fa fa-check"></i>Start Game
+				</li>
+
+				<li ng-show="stage=='victory'&&player.host" ng-click="reset_game()">
+					<i class="fa fa-refresh"></i>Play again
+				</li>
+
+				<li ng-hide="stage=='intro'||stage=='browse'" ng-click="leaveGame()" ng-class="{slide:stage=='game'}">
+					<i class="fa fa-times"></i><span>Leave Game</span>
+				</li>
+
+				<li ng-show="stage=='browse'" ng-click="createGame()">
+					<i class="fa fa-plus"></i>Create Game
+				</li>
 			</ul>
 		</header>
 
@@ -100,20 +110,29 @@
 
 
 
-		<div class="browse panel" ng-switch-when="browse">
-			<h2>Current Games</h2>
+		<div class="browse" ng-switch-when="browse">
+			<div class="title">
+				<h2>Current Games</h2>
+			</div>
+
+			<table>
+				<tr>
+					<th>Host</th>
+					<th width="100">Players</th>
+					<th width="100">Password</th>
+					<th width="100"></th>
+				</tr>
+				<tr ng-repeat="game in games">
+					<td>{{game.name}}</td>
+					<td>{{game.players.length}}/{{game.player_limit}}</td>
+					<td>{{!!game.password.length}}</td>
+					<td class="align-right"><button class="button" ng-click="joinGame()">Join</button></td>
+				</tr>
+				<tr>
+					<td ng-hide="games.length" class="no-games" colspan="4">There are no games</td>
+				</tr>
+			</table>
 			
-			<ul class="rooms">
-				<li ng-repeat="game in games" ng-click="joinGame()">
-					<div class="title">{{game.name}}</div>
-					<div class="info">
-						<p>Players: {{game.players.length}}/{{game.player_limit}}</p>
-						<p>Password: {{game.password.length}}</p>
-					</div>
-					<button class="join_button">Join</button>
-				</li>
-			</ul>
-			<p ng-hide="games.length" class="no-games">There are no games</p>
 		</div>
 
 

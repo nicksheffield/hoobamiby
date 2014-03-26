@@ -29,7 +29,7 @@ html
 
 body
 	font-family fonts
-	background #fff url('../img/whitediamond.png')
+	//background #fff url('../img/whitediamond.png')
 	height 100%
 	margin 0
 
@@ -327,6 +327,13 @@ header
 
 
 .browse
+	.title
+		height 75px
+		line-height 75px
+		padding 0 1em
+
+		h2
+			margin 0
 
 	.rooms
 		padding 0
@@ -701,3 +708,73 @@ header
 
 		&:hover
 			box-shadow 0 0 5px #fff
+
+
+
+table
+	width 100%
+	border-collapse collapse
+	border-spacing 0
+
+tr
+	text-align center
+
+	td, th
+		text-align left
+		padding 1em
+		border 1px solid #eee
+
+	td.align-center
+		text-align center
+
+	td.align-right
+		text-align right
+
+	h1
+		font-size 2em
+
+		transition color 0.1s
+
+	h2
+		margin-bottom 0
+
+	.button
+		background none
+		color #000
+		border 1px solid black
+		font-weight normal
+		padding 0em 1em
+		line-height 40px
+		
+		transition all 0.1s
+
+		&:hover
+			background #000
+			color #fff
+			box-shadow 0 0 10px #000
+
+
+		i.fa
+			padding-right 1em
+
+
+		&.icon-only
+			i.fa
+				padding-right 0
+
+		&.delete
+			background #e74c3c
+			color #fff
+			-webkit-font-smoothing antialiased
+
+			&:hover
+				background #c0392b
+
+		&.edit
+			background #3498db
+			color #fff
+			-webkit-font-smoothing antialiased
+
+			&:hover
+				background #2980b9
+	

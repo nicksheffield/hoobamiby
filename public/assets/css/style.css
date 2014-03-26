@@ -9,7 +9,6 @@ html {
 }
 body {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  background: #fff url("../img/whitediamond.png");
   height: 100%;
   margin: 0;
 }
@@ -270,6 +269,14 @@ header.dark li:hover {
 .game .symbol {
   box-shadow: 0 0 10px rgba(0,0,0,0.7);
   margin: 32px 0 32px 32px;
+}
+.browse .title {
+  height: 75px;
+  line-height: 75px;
+  padding: 0 1em;
+}
+.browse .title h2 {
+  margin: 0;
 }
 .browse .rooms {
   padding: 0;
@@ -605,4 +612,75 @@ header.dark li:hover {
 }
 .modal button:hover {
   box-shadow: 0 0 5px #fff;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+tr {
+  text-align: center;
+}
+tr td,
+tr th {
+  text-align: left;
+  padding: 1em;
+  border: 1px solid #eee;
+}
+tr td.align-center {
+  text-align: center;
+}
+tr td.align-right {
+  text-align: right;
+}
+tr h1 {
+  font-size: 2em;
+  -webkit-transition: color 0.1s;
+  -moz-transition: color 0.1s;
+  -ms-transition: color 0.1s;
+  -o-transition: color 0.1s;
+  transition: color 0.1s;
+}
+tr h2 {
+  margin-bottom: 0;
+}
+tr .button {
+  background: none;
+  color: #000;
+  border: 1px solid #000;
+  font-weight: normal;
+  padding: 0em 1em;
+  line-height: 40px;
+  -webkit-transition: all 0.1s;
+  -moz-transition: all 0.1s;
+  -ms-transition: all 0.1s;
+  -o-transition: all 0.1s;
+  transition: all 0.1s;
+}
+tr .button:hover {
+  background: #000;
+  color: #fff;
+  box-shadow: 0 0 10px #000;
+}
+tr .button i.fa {
+  padding-right: 1em;
+}
+tr .button.icon-only i.fa {
+  padding-right: 0;
+}
+tr .button.delete {
+  background: #e74c3c;
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+tr .button.delete:hover {
+  background: #c0392b;
+}
+tr .button.edit {
+  background: #3498db;
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+tr .button.edit:hover {
+  background: #2980b9;
 }

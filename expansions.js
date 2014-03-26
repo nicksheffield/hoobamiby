@@ -923,7 +923,7 @@ module.exports = {
 			'Robots?',
 			'A computer',
 			'All the downloadin!',
-			'fallopian tube spaghetti',
+			'Fallopian tube spaghetti',
 			'A Ham Planet',
 			'Menstruation mouthwash',
 			'A ghost chip',
@@ -931,13 +931,14 @@ module.exports = {
 			'I love lamp',
 			'A coathanger attached to a vacuum cleaner',
 			'LOUD NOISES',
-			'ksdljhgsldghj',
 			'Sticking a midget to a fat person with super glue',
 			'Hairy Boobs',
 			'Pepperoni nips',
 			'Ghost Mustard',
 			'Laddergoat',
-			'420'
+			'420',
+			'Dildos at the dinner table',
+			'Deleting the nudes'
 		],
 		black: [
 			{text: "%s? Ten-outta-ten!", pick: 1},
